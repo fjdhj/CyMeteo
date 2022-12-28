@@ -26,7 +26,7 @@ aide() {
     echo "	-A: Antilles"
     echo "	-O: Océan indien"
     echo "	-Q: Antarctique"
-    echo "Restriction temporel :"
+    echo "Restriction temporel (ne spécifier qu'un fois par execution) :"
     echo "  -d <min> <max>: le prend que les données dans l'intervalle [<min>, <max>]"
     echo "  Les valeurs <min> et <max> sont des dates au format YYYY-MM-DD (année, mois, jour)"
     echo "Mode de tri :"
@@ -48,40 +48,95 @@ fi
 typeDonne=""
 position=""
 algoTri=""
+tempsMin=""
+tempsMax=""
+cheminFichier=""
 
+#Variable utilisé pour passer le case et traiter les argument autrement
+#Si la variable est positive, on récupère les arguments complémentaire de l'option -d
+#Si la variable est négative, on récupère l'argument complémentaire de l'option -f
+passerCase=0
 
 for arg in $(seq 1 $#) ; do
     echo "${!arg}"
-    case "${!arg}" in
-        
-        #Aide (--help)
-        --help)
-            aide
-            exit 0 ;;
 
-        #Type de donnee
-        -[tp][1-3] | -[whm])
-            typeDonne="$typeDonne ${!arg}" ;;
+    #Valeur <min> de l'option -d
+    if [ $passerCase -eq 2 ] ; then
+        # [0-9] : indique l'ensemble des charactère de 0 à 9 (donc les chiffres)
+        # {n} : indique le l'expression presedente est répété n fois
+        # $ : indique la fin de la ligne (necessaire)
+        # ^ ; indique le début de la ligne (necessaire)
+        # source  : https://fr.wikipedia.org/wiki/Expression_r%C3%A9guli%C3%A8re 
+        if [[ ! "${!arg}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] ; then
+            echo "La valeur <min> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
+            exit 1;
+        fi
+        tempsMin=${!arg}
+        passerCase=$(( passerCase - 1 ))
 
-        #Restriction geographique 
-        -[FGSAOQ])
-            if [ "$position" != "" ] ; then
-                echo "Mauvais argument, $position et ${!arg} sont exclusive. Utilisez --help pour voir comment utiliser le script" >&2
-                exit 1;
-            fi
-            position=${!arg} ;;
+    #valeur <max> de l'option -d
+    elif [ $passerCase -eq 1 ] ; then
+        if [[ ! "${!arg}" =~ [0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] ; then
+            echo "La valeur <max> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
+            exit 1;
+        fi
+        tempsMax=${!arg}
+        passerCase=$(( passerCase - 1 ))
+    
+    #valeur <cheminFichierDonnee> de l'option -f
+    elif [ $passerCase -eq -1 ] ; then
+        if [ ! -f $arg ] ; then
+            echo "La valeur donnée pour -f ne correspond pas a un fichier. Utillisez --help pour voir comment utiliser le script" >&2
+            exit 1;
+        fi
+        cheminFichier=${!arg}
+        passerCase=$((passerCase + 1))
+    
+    else
+        case "${!arg}" in
+            
+            #Aide (--help)
+            --help)
+                aide
+                exit 0 ;;
 
-        #Algorithme de tri
-        --tab | --abr | --avl)
-            if [ "$algoTri" != "" ] ; then
-                echo "Mauvais argument, $algoTri et ${!arg} sont exclusive. Utilisez --help pour voir comment utiliser le script" >&2
-                exit 1;
-            fi
-            algoTri=${!arg} ;;
+            #Type de donnee
+            -[tp][1-3] | -[whm])
+                typeDonne="$typeDonne ${!arg}" ;;
 
-        #L'argument n'existe pas
-        *)
-            echo "Mauvais argument, utilisez --help pour voir comment utiliser le script" >&2 
-            exit 1 ;;
-    esac
+            #Restriction geographique 
+            -[FGSAOQ])
+                if [ "$position" != "" ] ; then
+                    echo "Mauvais argument, $position et ${!arg} sont exclusive. Utilisez --help pour voir comment utiliser le script" >&2
+                    exit 1;
+                fi
+                position=${!arg} ;;
+
+            #Algorithme de tri
+            --tab | --abr | --avl)
+                if [ "$algoTri" != "" ] ; then
+                    echo "Mauvais argument, $algoTri et ${!arg} sont exclusive. Utilisez --help pour voir comment utiliser le script" >&2
+                    exit 1;
+                fi
+                algoTri=${!arg} ;;
+
+            #Restriction temporelle
+            -d)
+                if [ "$tempsMin" != "" ] ; then
+                    echo "Mauvais argument, le parametre -d ne peux être spécifié deux fois. Utilisez --help pour voir comment utiliser le script" >&2
+                fi
+                passerCase=2 ;;
+
+            -f)
+                if [ "$cheminFichier" != "" ] ; then
+                    echo "Le chemin vers le fichier ne peut pas être spécifié deux fois. Utilisez --help pour voir comment utiliser le script" >&2
+                fi
+                passerCase=-1 ;;
+
+            #L'argument n'existe pas
+            *)
+                echo "Mauvais argument, utilisez --help pour voir comment utiliser le script" >&2 
+                exit 1 ;;
+        esac
+    fi
 done
