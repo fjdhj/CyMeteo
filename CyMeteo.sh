@@ -64,7 +64,6 @@ cheminFichier=""
 passerCase=0
 
 for arg in $(seq 1 $#) ; do
-	echo "${!arg}"
 
 	#Valeur <min> de l'option -d
 	if [ $passerCase -eq 2 ] ; then
@@ -91,8 +90,8 @@ for arg in $(seq 1 $#) ; do
 	
 	#valeur <cheminFichierDonnee> de l'option -f
 	elif [ $passerCase -eq -1 ] ; then
-		if [ ! -f "$arg" ] ; then
-			echo "La valeur donnée pour -f ne correspond pas a un fichier. Utillisez --help pour voir comment utiliser le script" >&2
+		if [ ! -f "${!arg}" ] ; then
+			echo "${!arg} n'est pas un fichier. Utillisez --help pour voir comment utiliser le script" >&2
 			exit 1;
 		fi
 		cheminFichier=${!arg}
