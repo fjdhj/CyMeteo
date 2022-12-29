@@ -37,6 +37,10 @@ aide() {
     echo "Affichage de l'aide :"
     echo "  --help: affiche cette aide"
     echo
+    echo "Valeur de retour :"
+    echo "  0: pas de problème lors de l'execution"
+    echo "  1: erreur avec les arguments du script"
+    echo "  2: probleme avec le fichier (ouverture/lecture impossible, mauvais format de données, ..."
 }
 
 
@@ -44,6 +48,8 @@ if [ $# -eq 0 ] ; then
     echo "Pas assez d'argument, utilisez --help pour voir comment utiliser le script" >&2
     exit 1;
 fi
+
+enteteFichier="ID OMM station;Date;Pression au niveau mer;Direction du vent moyen 10 mn;Vitesse du vent moyen 10 mn;Humidité;Pression station;Variation de pression en 24 heures;Précipitations dans les 24 dernières heures;Coordonnees;Température (°C);Température minimale sur 24 heures (°C);Température maximale sur 24 heures (°C);Altitude;communes (code)"
 
 typeDonne=""
 position=""
@@ -85,7 +91,7 @@ for arg in $(seq 1 $#) ; do
     
     #valeur <cheminFichierDonnee> de l'option -f
     elif [ $passerCase -eq -1 ] ; then
-        if [ ! -f $arg ] ; then
+        if [ ! -f "$arg" ] ; then
             echo "La valeur donnée pour -f ne correspond pas a un fichier. Utillisez --help pour voir comment utiliser le script" >&2
             exit 1;
         fi
@@ -140,3 +146,40 @@ for arg in $(seq 1 $#) ; do
         esac
     fi
 done
+
+if [ $passerCase -gt 0 ] ; then
+    echo "Argument -d incomplet, utilisez --help pour voir comment utiliser le script" >&2
+    exit 1
+fi
+
+if [ $passerCase -lt 0 ] ; then
+    echo "Argument -f incomplet, utilisez --help pour voir comment utiliser le script" >&2
+    exit 1
+fi
+
+#Vérification argument obligatoire
+if [ "$cheminFichier" == "" ] ; then
+    echo "Le chemin vers le fichier n'as pas été spécifié. Utilisez --help pour voir comment utiliser le script" >&2
+    exit 1
+fi
+
+if [ "$typeDonne" == "" ] ; then 
+    echo "Aucun type de donnée n'a été spécifié. Utilisez --help pour voir comment marche le script" >&2
+    exit 1
+fi
+
+#Ajout valeur par défaut
+if [ "$algoTri" == "" ] ; then 
+    algoTri="--avl"
+fi
+
+#Vérification du fichier de donnée
+if [ -r "$cheminFichier" ] ; then
+    echo "Impossible de lire le fichier $cheminFichier. Vérifier les permissions associés."
+    exit 2
+fi
+
+if [ "$enteteFichier" != "$(head -n1 "$cheminFichier")" ] ; then
+    echo "Le fichier n'est pas au bon format."
+    exit 2
+fi
