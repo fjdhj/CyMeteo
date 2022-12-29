@@ -173,7 +173,7 @@ if [ "$algoTri" == "" ] ; then
 fi
 
 #Vérification du fichier de donnée
-if [ -r "$cheminFichier" ] ; then
+if [ ! -r "$cheminFichier" ] ; then
 	echo "Impossible de lire le fichier $cheminFichier. Vérifier les permissions associés."
 	exit 2
 fi
