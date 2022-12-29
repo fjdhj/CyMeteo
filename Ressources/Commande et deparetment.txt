@@ -1,0 +1,13 @@
+Seulement les département (sans doublon) : cut -d";" -f15 fichier.csv | sort | uniq
+Seulement les coordonées (sans doublon) : cut -d";" -f15 fichier.csv | sort | uniq
+
+
+Récupèration des données France métropolitaine + corse : grep ";[0-8][0-9abAB][0-9][0-9][0-9]$\|;9[0-5][0-9][0-9][0-9]$" meteo_filtered_data_v1.csv
+Rècupèration des données Guyane française : grep ";973[0-9][0-9]$" meteo_filtered_data_v1.csv
+Rècupèration des données Saint-Pierre et Miquelon : grep ";975[0-9][0-9]$" meteo_filtered_data_v1.csv
+Rècupèration des données Antilles : grep ";97[127][0-9][0-9]$" meteo_filtered_data_v1.csv
+Rècupèration Océan indien : grep ";97[46][0-9][0-9]$\|9841[25]" meteo_filtered_data_v1.csv
+
+Antilles : Guadeloupe (971) + Martinique (972) + Saint-Barthélemy (977)
+Océan indien : Mayotte (976) + La Réunion (974) + Îles Éparses (98415) +  îles Kerguelen (98412)
+Antartique : d'arpès https://fr.wikipedia.org/wiki/Oc%C3%A9an_Austral, sous 60° sud (-60.0,XX,X) c'est l'océan austral et l'antartique

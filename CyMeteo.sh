@@ -41,6 +41,9 @@ aide() {
 	echo "  0: pas de problème lors de l'execution"
 	echo "  1: erreur avec les arguments du script"
 	echo "  2: probleme avec le fichier (ouverture/lecture impossible, mauvais format de données, ..."
+	echo "	3: "
+	echo "	4: Un erreur grave lors du déroulement du programme" 
+	echo
 }
 
 
@@ -50,6 +53,8 @@ if [ $# -eq 0 ] ; then
 fi
 
 enteteFichier="ID OMM station;Date;Pression au niveau mer;Direction du vent moyen 10 mn;Vitesse du vent moyen 10 mn;Humidité;Pression station;Variation de pression en 24 heures;Précipitations dans les 24 dernières heures;Coordonnees;Température (°C);Température minimale sur 24 heures (°C);Température maximale sur 24 heures (°C);Altitude;communes (code)"
+
+donneBrute=""
 
 typeDonne=""
 position=""
@@ -182,3 +187,37 @@ if [ "$enteteFichier" != "$(head -n1 "$cheminFichier")" ] ; then
 	echo "Le fichier n'est pas au bon format."
 	exit 2
 fi
+
+#Vérification du fichier C
+echo "ATTENTION: vérification du fichier C compilé impossible, ca a pas été codé"
+
+#Traitement restriction geographique
+case  $position in
+	"")
+		donneBrute=$(tail -n+2 "$cheminFichier") ;;
+	
+	-F) ;;
+	-G) ;;
+	-S) ;;
+	-A) ;;
+	-O) ;;
+	-Q) ;;
+
+	*)
+		echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)."
+		exit 4 ;;
+esac
+
+#Traitement de chaque type de donnée
+for type in $typeDonne ; do
+	echo "$type"
+
+	case $type in
+		
+	
+		*)
+			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
+			exit 4 ;;
+
+	esac
+done
