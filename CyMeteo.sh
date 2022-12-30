@@ -77,7 +77,7 @@ for arg in $(seq 1 $#) ; do
 		# $ : indique la fin de la ligne (necessaire)
 		# ^ ; indique le début de la ligne (necessaire)
 		# source  : https://fr.wikipedia.org/wiki/Expression_r%C3%A9guli%C3%A8re 
-		if [[ ! "${!arg}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] ; then
+		if [[ ! "${!arg}" =~ ^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$ ]] ; then
 			echo "La valeur <min> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
 			exit 1;
 		fi
@@ -196,12 +196,26 @@ case  $position in
 	"")
 		donneBrute=$(tail -n+2 "$cheminFichier") ;;
 	
-	-F) ;;
-	-G) ;;
-	-S) ;;
-	-A) ;;
-	-O) ;;
-	-Q) ;;
+	#France : code postal
+	-F) donneBrute=$(grep ";[0-8][0-9abAB][0-9][0-9][0-9]$\|;9[0-5][0-9][0-9][0-9]$" "$cheminFichier") ;;
+
+	#Guyane : code postal
+	-G) donneBrute=$(grep ";973[0-9][0-9]$" "$cheminFichier");;
+
+	#St Pierre et Miquelon : code postal + coord. géo (ile sans code postal a proximité)
+	-S) donneBrute=$(grep ";975[0-9][0-9]$" "$cheminFichier")
+		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(46\.(7[4-9]|[8-9])([0-9])*|47\.(0|1[0-3])([0-9])*|47\.14(0)*),-56\.(1[3-9]([0-9])*|[2-3]([0-9])*|40(0)*);")" ;;
+	
+	#Antilles : code postal + coord. géo (ile sans code postal)
+	-A) donneBrute=$(grep ";97[127][0-9][0-9]$" "$cheminFichier")
+		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(10\.[8-9]([0-9])*|1[1-8](\.([0-9])*)?|19(\.(0)*)?),-(59\.[4-9]([0-9])*|6[0-6](\.([0-9])*)?|67(\.([0-2]([0-9])*|3(0)*))?);")" ;;
+
+	#Océan indien : code postal + coord. Geo (iles sans code postal)
+	-O) donneBrute=$(grep ";97[46][0-9][0-9]$\|9841[25]" "$cheminFichier")
+		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(-60(\.(0)*)?|-[0-5][0-9](\.([0-9])*)?|0(\.(0)*)?),([3-9][0-9](\.([0-9])*)?|10[0-9](\.([0-9])*)?|110(\.(0)*)?);")" ;;
+
+	#Antartique : coord. geo inf. ou egal 60° sud
+	-Q) donneBrute=$(grep ";$" "$cheminFichier" | grep -E ";-([6-9][0-9](\.([0-9])*)?|1[0-8][0-9](\.([0-9])*)?),.*;") ;;
 
 	*)
 		echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)."
