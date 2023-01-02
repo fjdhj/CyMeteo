@@ -17,6 +17,7 @@ pArbre creerArbre(float* tab)
         new->tab[i] = tab[i];
     }
 
+    new->equilibre = 0; // Initialise l'equilibre pour les AVL
     new->fg = NULL;
     new->fd = NULL;
 }

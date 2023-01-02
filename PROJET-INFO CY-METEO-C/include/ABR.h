@@ -10,6 +10,7 @@
 typedef struct arbre
 {
     float tab[TAILLE];
+    int equilibre;
     struct arbre* fg;
     struct arbre* fd;
 }Arbre;
