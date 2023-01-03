@@ -1,2 +1,13 @@
+#Ignorer les executable :
+#Sous linux (sans extension)
+*
+!/**/
+!*.*
+#Sous windows
+*.exe
+
+#Ignorer les fichier CSV
 *.csv
+
+#Ignorer les fichier de compilation
 *.o
