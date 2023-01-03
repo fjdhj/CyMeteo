@@ -1,0 +1,2 @@
+printf("POINTEUR NULL");
+    }
