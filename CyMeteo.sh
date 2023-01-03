@@ -53,6 +53,8 @@ if [ $# -eq 0 ] ; then
 fi
 
 enteteFichier="ID OMM station;Date;Pression au niveau mer;Direction du vent moyen 10 mn;Vitesse du vent moyen 10 mn;Humidité;Pression station;Variation de pression en 24 heures;Précipitations dans les 24 dernières heures;Coordonnees;Température (°C);Température minimale sur 24 heures (°C);Température maximale sur 24 heures (°C);Altitude;communes (code)"
+nomProgrammeTri="exec"
+nomDossierC="PROJET-INFO CY-METEO-C"
 
 donneBrute=""
 
@@ -190,6 +192,10 @@ fi
 
 #Vérification du fichier C
 echo "ATTENTION: vérification du fichier C compilé impossible, ca a pas été codé"
+if [ ! -f "$nomProgrammeTri" ] ; then
+	make -C "$nomDossierC" 
+	mv "$nomDossierC/$nomProgrammeTri" .
+fi
 
 #Traitement restriction geographique
 case  $position in
