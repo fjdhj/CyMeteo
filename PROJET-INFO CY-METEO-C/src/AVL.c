@@ -6,50 +6,55 @@ pArbre insertion_AVL(pArbre a, float* tab, int* h)
 {
     if(PTR_NUL(a))
     {
-        printf("HELLOuhsekufchsdku ");
         *h = 1;
         return creerArbre(tab);
     }
 
-    else if(tab[0] < a->tab[0])
-    {
-        a->fg = insertion_AVL(a->fg, tab, h);
-        *h = -*h;
-    }
 
-    else if(tab[0] > a->tab[0])
-    {
-        a->fd = insertion_AVL(a->fd, tab, h);
-    }
+    bool min = false;
+    bool egale = true;
 
-    else if(tab[0] == a->tab[0])// Si la valeur est egale on compare celle du prochain champ tout comme l'ABR
+    // On compare toutes les valeurs tant qu'il y a un doublon
+    for(int i = 0; i < TAILLE; i++)
     {
-        if(tab[1] < a->tab[1])
+        if(tab[i] != a->tab[i])
         {
-            a->fg = insertion_AVL(a->fg, tab, h);
+            egale = false;
+            min = tab[i] < a->tab[i];
+            break;        
+        }
+    }
+
+    if(!egale)
+    {
+        if(min)
+        {
+            a->fg = insertion_ABR(a->fg, tab);
             *h = -*h;
         }
 
-        else if(tab[1] > a->tab[1])
+        else
         {
-            a->fd = insertion_AVL(a->fd, tab, h);
+            a->fd = insertion_ABR(a->fd, tab);
+        }
+
+        // Remplace la valeur d'equilibre du noeud
+        if(PTR_NUL(a))
+        {
+            *h = 0;
+        }
+
+        else if(*h != 0)
+        {
+            a->equilibre += *h;
+            a = equilibrageAVL(a);
+            *h = (a->equilibre != 0);
         }
     }
 
-    // Remplace la valeur d'equilibre du noeud
-    if(PTR_NUL(a))
-    {
-        *h = 0;
-    }
-
-    else if(*h != 0)
-    {
-        a->equilibre += *h;
-        a = equilibrageAVL(a);
-        *h = (a->equilibre != 0);
-    }
-
     return a;
+
+
 }
 
 /////
@@ -137,12 +142,11 @@ pArbre equilibrageAVL(pArbre a)
 
 
 
-
 void main()
 {
-    float tab[TAILLE] = {1, 1};
-    float tab2[TAILLE] = {2, 2};
-    float tab3[TAILLE] = {3, 2};
+    float tab[TAILLE] = {1, 1, 1, 1, 2};
+    float tab2[TAILLE] = {1, 1, 1, 1, 1};
+    float tab3[TAILLE] = {1, 3};
     float tab4[TAILLE] = {4, 2};
 
     pArbre a = creerArbre(tab4);
@@ -151,6 +155,5 @@ void main()
     a = insertion_AVL(a, tab, &h);
     a = insertion_AVL(a, tab3, &h);
 
-    printf("%d ", a->equilibre);
-    printf("%f , ", a->tab[0]);
+    parcour_infixe(a);
 }

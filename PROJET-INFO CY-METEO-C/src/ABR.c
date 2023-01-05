@@ -4,8 +4,8 @@
 // Fonction permetant de creer le noeud d'un arbre et de retourner son adresse
 pArbre creerArbre(float* tab)
 {
-    pArbre new = malloc(sizeof(Arbre));
-    if(PTR_NUL(new))
+    pArbre nouveau = malloc(sizeof(Arbre));
+    if(PTR_NUL(nouveau))
     {
         ERREUR_ALLOCATION;
         exit(1);
@@ -14,12 +14,12 @@ pArbre creerArbre(float* tab)
     // Affecte toute les valeurs du tableau dans le noeud
     for(int i = 0; i < TAILLE; i++)
     {
-        new->tab[i] = tab[i];
+        nouveau->tab[i] = tab[i];
     }
 
-    new->equilibre = 0; // Initialise l'equilibre pour les AVL
-    new->fg = NULL;
-    new->fd = NULL;
+    nouveau->equilibre = 0; // Initialise l'equilibre pour les AVL
+    nouveau->fg = NULL;
+    nouveau->fd = NULL;
 }
 
 // Ajoute un fils gauche au chainon mis en parametre
@@ -30,8 +30,8 @@ void ajouter_fg(pArbre a, float* tab)
         ARBRE_VIDE;
     }
 
-    pArbre new = creerArbre(tab);
-    a->fg = new;    
+    pArbre nouveau = creerArbre(tab);
+    a->fg = nouveau;    
 }
 
 // Ajoute un fils droit au chainon mis en parametre
@@ -44,8 +44,8 @@ void ajouter_fd(pArbre a, float* tab)
 
     if(!existe_fd(a))
     {
-        pArbre new = creerArbre(tab);
-        a->fd = new;
+        pArbre nouveau = creerArbre(tab);
+        a->fd = nouveau;
     }
 }
 
@@ -57,31 +57,33 @@ pArbre insertion_ABR(pArbre a, float* tab)
         return creerArbre(tab);
     }
 
-    else if(tab[0] < a->tab[0])
+    bool min = false;
+    bool egale = true;
+
+    // On compare toutes les valeurs tant qu'il y a un doublon
+    for(int i = 0; i < TAILLE; i++)
     {
-        a->fg = insertion_ABR(a->fg, tab);
+        if(tab[i] != a->tab[i])
+        {
+            egale = false;
+            min = tab[i] < a->tab[i];
+            break;        
+        }
     }
 
-    else if(tab[0] > a->tab[0])
+    if(!egale)
     {
-        a->fd = insertion_ABR(a->fd, tab);
-    }
-
-    
-    // Si l'on a un doublon on verifie la prochaine valeur du tableau pour le trier
-    else if (tab[0] == a->tab[0])
-    {
-        if(tab[1] < a->tab[1])
+        if(min)
         {
             a->fg = insertion_ABR(a->fg, tab);
-        } 
+        }
 
-        else if(tab[1] > a->tab[1])
+        else
         {
             a->fd = insertion_ABR(a->fd, tab);
         }
     }
-    
+
     return a;
 }
 
@@ -132,4 +134,13 @@ void parcour_infixe(pArbre a)
     }
 }
 
+/*
+void main()
+{
+    float tab[TAILLE] = {1};
+    float tab2[TAILLE] = {1, 2};
+    pArbre a = creerArbre(tab);
 
+    a = insertion_ABR(a, tab2);
+    parcour_infixe(a);
+}*/
