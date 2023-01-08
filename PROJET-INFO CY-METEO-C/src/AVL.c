@@ -141,7 +141,7 @@ pArbre equilibrageAVL(pArbre a)
 
 
 
-
+/*
 void main()
 {
     float tab[TAILLE] = {1, 1, 1, 1, 2};
@@ -156,4 +156,4 @@ void main()
     a = insertion_AVL(a, tab3, &h);
 
     parcour_infixe(a);
-}
+}*/
