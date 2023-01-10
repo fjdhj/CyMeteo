@@ -57,6 +57,14 @@ nomProgrammeTri="exec"
 nomDossierC="PROJET-INFO CY-METEO-C"
 
 donneBrute=""
+donnee=""
+
+#Fichier de sortie du programme C
+fichierSortie="Ressources/testGnuPlotP1.csv"
+#Fichier de donnée a trié (pour le programme C)
+fichierEntree=""
+#Fichier de donnée de plot
+fichierPlot="fichierPlot.cymeteo"
 
 typeDonne=""
 position=""
@@ -231,9 +239,37 @@ esac
 #Traitement de chaque type de donnée
 for type in $typeDonne ; do
 	echo "$type"
-
 	case $type in
-		
+		-[tp]1)
+			#Colone température : 11
+			if [ "$type" == "-t1" ] ; then
+				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
+				donnee="$(echo "$donneBrute" | cut -d";" -f1,11 | grep -v "$;")"
+			#Cas -p1
+			#Colone pression : 7
+			else
+				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
+				donnee="$(echo "$donneBrute" | cut -d";" -f1,7 | grep -v "$;")"
+			fi
+
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+
+			#Calcule moyenne, min et max
+			awk -F ';' 'BEGIN { num="" ; n=0 ; m=0 } { if(num!=$1){ if(n!=0){print m";"sum/n";"min";"max";"num} num=$1 ; min=$2 ; max=$2 ; n=0 ; sum=0 ; m+=1 } sum+=$2 ; n+=1 ; if($2<min){min=$2} if($2>max){max=$2} } END {print m";"sum/n";"min";"max";"num}' "$fichierSortie" > "$fichierPlot"
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Pression en fonction de la station"
+			set xlabel "ID Station"
+			set ylabel "Pression (Pa)"
+			set datafile separator ";"
+			Shadecolor = "#80E0A080"
+			set xtics rotate by 45 offset -2,-1.5
+			plot "$fichierPlot" using 1:4:3 with filledcurve fc rgb Shadecolor title "Plage des pressions", ''using 1:2:xtic(5) lw 2 with linespoints title "Pression moyenne"
+			EOFMarker
+
+		;;
 	
 		*)
 			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
