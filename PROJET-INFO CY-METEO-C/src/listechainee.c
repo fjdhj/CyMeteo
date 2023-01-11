@@ -107,7 +107,7 @@ pChainon triebulle(pChainon pliste)
     pChainon current = pliste;
     float temp[TAILLE] = {0};
 
-    while(est_trie == false)
+    while(!est_trie)
     {
         est_trie = true;
         current = pliste;
@@ -115,16 +115,7 @@ pChainon triebulle(pChainon pliste)
         while(!PTR_NUL(current->suivant))
         {
             // On compare chaque valeurs du tableau pour savoir si un trie est necessaire
-            for(int i = 0; i < TAILLE; i++)
-            {
-                if(current->tab[i] > current->suivant->tab[i])
-                {
-                    peut_trier = true;
-                    break;
-                }
-            }
-
-            if(peut_trier)
+            if(current->tab[0] > current->suivant->tab[0])
             {
                 est_trie = false;
                 
@@ -142,6 +133,7 @@ pChainon triebulle(pChainon pliste)
 
     return pliste;
 }
+
 
 // Affiche un seul chainon de la liste
 void traiter(pChainon pliste)
@@ -177,20 +169,19 @@ void traiterListe(pChainon pliste)
     }
 }
 
+
 /*
 void main()
 {
-    float tab[TAILLE] = {1, 1, 1, 1, 1};
+    float tab[TAILLE] = {0, 1, 1, 1, 1};
     float tab2[TAILLE] = {1, 0, 1, 1, 10};
-    float tab3[TAILLE] = {1, 1, 1, 1, 3};
-    float tab4[TAILLE] = {1, 1, 1, 1, 4};
+    float tab3[TAILLE] = {1, 4, 1, 1, 1};
+    float tab4[TAILLE] = {2, 1, 1, 1, 100};
     pChainon a = creationchainon(tab3);
-    pChainon b = creationchainon(tab);
-    pChainon c = creationchainon(tab2);
-    pChainon d = creationchainon(tab);
-    a->suivant = b;
-    b->suivant = c;
-    c->suivant = d;
+    insertfin(a, tab);
+    insertfin(a, tab);
+    insertfin(a, tab);
+    insertfin(a, tab);
 
     a = triebulle(a);
     traiterListe(a);

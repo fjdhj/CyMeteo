@@ -11,4 +11,7 @@ void main(int argc, char* argv[])
     // Ouverture du fichier temporaire
     FILE* mon_fichier = NULL;
     mon_fichier = fopen("temp/data.txt", "r+");
+
+    printf("%d", argc);
+    printf("%s %s",  argv[1]);
 }

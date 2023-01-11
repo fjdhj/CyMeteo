@@ -60,28 +60,15 @@ pArbre insertion_ABR(pArbre a, float* tab)
     bool min = false;
     bool egale = true;
 
-    // On compare toutes les valeurs tant qu'il y a un doublon
-    for(int i = 0; i < TAILLE; i++)
+    // On compare toutes les premier champs
+    if(tab[0] <= a->tab[0])
     {
-        if(tab[i] != a->tab[i])
-        {
-            egale = false;
-            min = tab[i] < a->tab[i];
-            break;        
-        }
+        a->fg = insertion_ABR(a->fg, tab);
     }
 
-    if(!egale)
+    else
     {
-        if(min)
-        {
-            a->fg = insertion_ABR(a->fg, tab);
-        }
-
-        else
-        {
-            a->fd = insertion_ABR(a->fd, tab);
-        }
+        a->fd = insertion_ABR(a->fd, tab);
     }
 
     return a;
@@ -117,8 +104,7 @@ void traiter_noeud(pArbre a)
         {
             printf("| ");
         }
-    }
-    
+    }    
 }
 
 
