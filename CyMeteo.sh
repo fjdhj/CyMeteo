@@ -87,7 +87,7 @@ for arg in $(seq 1 $#) ; do
 		# $ : indique la fin de la ligne (necessaire)
 		# ^ ; indique le début de la ligne (necessaire)
 		# source  : https://fr.wikipedia.org/wiki/Expression_r%C3%A9guli%C3%A8re 
-		if [[ ! "${!arg}" =~ ^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$ ]] ; then
+		if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
 			echo "La valeur <min> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
 			exit 1;
 		fi
@@ -96,7 +96,7 @@ for arg in $(seq 1 $#) ; do
 
 	#valeur <max> de l'option -d
 	elif [ $passerCase -eq 1 ] ; then
-		if [[ ! "${!arg}" =~ [0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] ; then
+		if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
 			echo "La valeur <max> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
 			exit 1;
 		fi
@@ -198,6 +198,12 @@ if [ "$enteteFichier" != "$(head -n1 "$cheminFichier")" ] ; then
 	exit 2
 fi
 
+#Vérification ordre parametre valeur min max de l'argument -d
+if [ "$tempsMin" \> "$tempsMax" ] ; then
+	echo "La valeur min de l'argument -d est supèrieur a celle de max. Utilisez --help pour voir comment marche le script" >&2
+	exit 1
+fi
+
 #Vérification du fichier C
 echo "ATTENTION: vérification du fichier C compilé impossible, ca a pas été codé"
 if [ ! -f "$nomProgrammeTri" ] ; then
@@ -236,12 +242,12 @@ if [ "$position" != "" ] ; then
 
 	#Application restriction temporel
 	if [ "$tempsMax" != "" ] ; then
-		time donneBrute=$(echo "$donneBrute" | awk -F";" '{ date=substr($2,1,10) ; if($tempsMin <= date && date <= $tempsMax){ print } }')
+		time donneBrute=$(echo "$donneBrute" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if($tempsMin <= date && date <= $tempsMax){ print } }')
 	fi
 else
 	#Application restriction temporel ou mise de valeur par defaut
 	if [ "$tempsMax" != "" ] ; then
-		time donneBrute=$(tail -n+2 "$cheminFichier" | awk -F";" '{ date=substr($2,1,10) ; if($tempsMin <= date && date <= $tempsMax){ print } }')
+		time donneBrute=$(tail -n+2 "$cheminFichier" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if(tempsMin <= date && date <= tempsMax){ print } }')
 	else
 		time donneBrute=$(tail -n+2 "$cheminFichier")
 	fi
