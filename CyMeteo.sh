@@ -206,35 +206,46 @@ if [ ! -f "$nomProgrammeTri" ] ; then
 fi
 
 #Traitement restriction geographique
-case  $position in
-	"")
-		donneBrute=$(tail -n+2 "$cheminFichier") ;;
-	
-	#France : code postal
-	-F) donneBrute=$(grep ";[0-8][0-9abAB][0-9][0-9][0-9]$\|;9[0-5][0-9][0-9][0-9]$" "$cheminFichier") ;;
+if [ "$position" != "" ] ; then
+	case $position in
+		#France : code postal
+		-F) donneBrute=$(grep ";[0-8][0-9abAB][0-9][0-9][0-9]$\|;9[0-5][0-9][0-9][0-9]$" "$cheminFichier") ;;
 
-	#Guyane : code postal
-	-G) donneBrute=$(grep ";973[0-9][0-9]$" "$cheminFichier");;
+		#Guyane : code postal
+		-G) donneBrute=$(grep ";973[0-9][0-9]$" "$cheminFichier");;
 
-	#St Pierre et Miquelon : code postal + coord. géo (ile sans code postal a proximité)
-	-S) donneBrute=$(grep ";975[0-9][0-9]$" "$cheminFichier")
-		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(46\.(7[4-9]|[8-9])([0-9])*|47\.(0|1[0-3])([0-9])*|47\.14(0)*),-56\.(1[3-9]([0-9])*|[2-3]([0-9])*|40(0)*);")" ;;
-	
-	#Antilles : code postal + coord. géo (ile sans code postal)
-	-A) donneBrute=$(grep ";97[127][0-9][0-9]$" "$cheminFichier")
-		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(10\.[8-9]([0-9])*|1[1-8](\.([0-9])*)?|19(\.(0)*)?),-(59\.[4-9]([0-9])*|6[0-6](\.([0-9])*)?|67(\.([0-2]([0-9])*|3(0)*))?);")" ;;
+		#St Pierre et Miquelon : code postal + coord. géo (ile sans code postal a proximité)
+		-S) donneBrute=$(grep ";975[0-9][0-9]$" "$cheminFichier")
+			donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(46\.(7[4-9]|[8-9])([0-9])*|47\.(0|1[0-3])([0-9])*|47\.14(0)*),-56\.(1[3-9]([0-9])*|[2-3]([0-9])*|40(0)*);")" ;;
+		
+		#Antilles : code postal + coord. géo (ile sans code postal)
+		-A) donneBrute=$(grep ";97[127][0-9][0-9]$" "$cheminFichier")
+			donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(10\.[8-9]([0-9])*|1[1-8](\.([0-9])*)?|19(\.(0)*)?),-(59\.[4-9]([0-9])*|6[0-6](\.([0-9])*)?|67(\.([0-2]([0-9])*|3(0)*))?);")" ;;
 
-	#Océan indien : code postal + coord. Geo (iles sans code postal)
-	-O) donneBrute=$(grep ";97[46][0-9][0-9]$\|9841[25]" "$cheminFichier")
-		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(-60(\.(0)*)?|-[0-5][0-9](\.([0-9])*)?|0(\.(0)*)?),([3-9][0-9](\.([0-9])*)?|10[0-9](\.([0-9])*)?|110(\.(0)*)?);")" ;;
+		#Océan indien : code postal + coord. Geo (iles sans code postal)
+		-O) donneBrute=$(grep ";97[46][0-9][0-9]$\|9841[25]" "$cheminFichier")
+			donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(-60(\.(0)*)?|-[0-5][0-9](\.([0-9])*)?|0(\.(0)*)?),([3-9][0-9](\.([0-9])*)?|10[0-9](\.([0-9])*)?|110(\.(0)*)?);")" ;;
 
-	#Antartique : coord. geo inf. ou egal 60° sud
-	-Q) donneBrute=$(grep ";$" "$cheminFichier" | grep -E ";-([6-9][0-9](\.([0-9])*)?|1[0-8][0-9](\.([0-9])*)?),.*;") ;;
+		#Antartique : coord. geo inf. ou egal 60° sud
+		-Q) donneBrute=$(grep ";$" "$cheminFichier" | grep -E ";-([6-9][0-9](\.([0-9])*)?|1[0-8][0-9](\.([0-9])*)?),.*;") ;;
 
-	*)
-		echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)."
-		exit 4 ;;
-esac
+		*)
+			echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)."
+			exit 4 ;;
+	esac
+
+	#Application restriction temporel
+	if [ "$tempsMax" != "" ] ; then
+		time donneBrute=$(echo "$donneBrute" | awk -F";" '{ date=substr($2,1,10) ; if($tempsMin <= date && date <= $tempsMax){ print } }')
+	fi
+else
+	#Application restriction temporel ou mise de valeur par defaut
+	if [ "$tempsMax" != "" ] ; then
+		time donneBrute=$(tail -n+2 "$cheminFichier" | awk -F";" '{ date=substr($2,1,10) ; if($tempsMin <= date && date <= $tempsMax){ print } }')
+	else
+		time donneBrute=$(tail -n+2 "$cheminFichier")
+	fi
+fi
 
 #Traitement de chaque type de donnée
 for type in $typeDonne ; do
