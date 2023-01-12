@@ -126,7 +126,6 @@ void main()
     float tab[TAILLE] = {1};
     float tab2[TAILLE] = {1, 2};
     pArbre a = creerArbre(tab);
-
     a = insertion_ABR(a, tab2);
     parcour_infixe(a);
 }*/

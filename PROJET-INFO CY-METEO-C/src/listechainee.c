@@ -183,9 +183,11 @@ void main()
     insertfin(a, tab);
     insertfin(a, tab);
 
-    a = triebulle(a);
-    traiterListe(a);
+    for(int i = 0; i < 100000; i++)
+    {
+        insertfin(a, tab);
+    }
 
-    
-    
+    a = triebulle(a);
+    //traiterListe(a);
 }*/

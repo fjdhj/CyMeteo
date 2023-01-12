@@ -6,7 +6,6 @@ pArbre insertion_AVL(pArbre a, float* tab, int* h)
 {
     if(PTR_NUL(a))
     {
-        printf("HELLOuhsekufchsdku ");
         *h = 1;
         return creerArbre(tab);
     }
@@ -122,7 +121,7 @@ pArbre equilibrageAVL(pArbre a)
 
 
 
-/*
+
 void main()
 {
     float tab[TAILLE] = {10, 1, 1, 1, 10};
@@ -142,8 +141,12 @@ void main()
     a = insertion_AVL(a, tab, &h);
     a = insertion_AVL(a, tab, &h);
     a = insertion_AVL(a, tab, &h);
-    
 
-    parcour_infixe(a);
-}*/
+    for(int i = 0; i < 2732342; i++)
+    {
+        a = insertion_AVL(a, tab, &h);
+    }
+
+    //parcour_infixe(a);
+}
 

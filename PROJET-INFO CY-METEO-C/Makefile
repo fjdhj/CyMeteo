@@ -3,7 +3,7 @@ vpath
 vpath %.c src
 vpath %.h include
 
-all: exec
+all: exec clean
 
 # Compilation Liste Chainee
 listechainee.o: listechainee.c listechainee.h 
@@ -25,3 +25,5 @@ exec: listechainee.o AVL.o ABR.o main.o
 
 
 # Supprime tous les fichiers objects
+clean:
+	rm -f *.o
