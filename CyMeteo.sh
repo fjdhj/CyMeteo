@@ -60,9 +60,9 @@ donneBrute=""
 donnee=""
 
 #Fichier de sortie du programme C
-fichierSortie="Ressources/testGnuPlotP1.csv"
+fichierSortie="sortie.csv"
 #Fichier de donnée a trié (pour le programme C)
-fichierEntree=""
+fichierEntree="entree.csv"
 #Fichier de donnée de plot
 fichierPlot="fichierPlot.cymeteo"
 
@@ -242,14 +242,14 @@ if [ "$position" != "" ] ; then
 
 	#Application restriction temporel
 	if [ "$tempsMax" != "" ] ; then
-		time donneBrute=$(echo "$donneBrute" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if($tempsMin <= date && date <= $tempsMax){ print } }')
+		donneBrute="$(echo "$donneBrute" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if(tempsMin <= date && date <= tempsMax){ print } }')"
 	fi
 else
 	#Application restriction temporel ou mise de valeur par defaut
 	if [ "$tempsMax" != "" ] ; then
-		time donneBrute=$(tail -n+2 "$cheminFichier" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if(tempsMin <= date && date <= tempsMax){ print } }')
+		donneBrute=$(tail -n+2 "$cheminFichier" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if(tempsMin <= date && date <= tempsMax){ print } }')
 	else
-		time donneBrute=$(tail -n+2 "$cheminFichier")
+		donneBrute=$(tail -n+2 "$cheminFichier")
 	fi
 fi
 
@@ -287,7 +287,92 @@ for type in $typeDonne ; do
 			EOFMarker
 
 		;;
-	
+
+		-[tp]2)
+			if [ "$type" == "-t2" ] ; then
+				#Récupèration date et heure convertie et pression
+				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($11 != "") {"date -d\""$2"\" -u +%Y%m%d%H"|getline out ; print out";"$11} }')"
+			
+			#Cas -p2
+			else
+				#Récupèration date et heure convertie et pression
+				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($7 != "") {"date -d\""$2"\" -u +%Y%m%d%H"|getline out ; print out";"$7} }')"
+			fi
+
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			sort "$fichierEntree" > "$fichierSortie"
+
+			#Calcule moyenne
+			awk -F ';' 'BEGIN { date="" ; n=0 } { if(date!=$1){ if(n!=0){print date";"sum/n} date=$1 ; n=0 ; sum=0 } sum+=$2 ; n+=1 } END {print date";"sum/n}' "$fichierSortie" > "$fichierPlot"
+			
+			#Generation graphique via gnuplot
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Pression en fonction du jour"
+			set xlabel "Jour"
+			set ylabel "Pression (Pa)"
+			set datafile separator ";"
+			set xdata time
+			set timefmt '%Y%m%d%H'
+			set xtics rotate by 45 offset -2,-1.5
+			plot "$fichierPlot" using 1:2 lw 2 smooth acsplines title "Pression moyenne"
+			EOFMarker
+			;;
+			
+
+		-[tp]3)
+			#Il faut trier en fonction de la date PUIS du numéro de station, donc le format seras particulier : 
+			#on met la date PUIS le numéro de station coller l'un a l'autre
+			if [ "$type" == "-t3" ] ; then
+				#Récupèration date et station avec heure et pression
+				donnee="$(echo "$donneBrute" | awk -F';' '{ if($11!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$11 } }')"
+			
+			#Cas -p2
+			else
+				#Récupèration date et station avec heure et température
+				donnee="$(echo "$donneBrute" | awk -F';' '{ if($7!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$7 } }')"
+			fi
+
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			time sort "$fichierEntree" > "$fichierSortie"
+
+			#Opération poste trie : on met chaque heure dans une case differente
+			awk -F';' 'BEGIN { for(i = 0; i < 24; i++) {heure[i]=""} } \
+						     { heure[$2]=heure[$2] substr($1,1,8)";"substr($1,9)";"$2";"$3"\n" } \
+					   END   { for(i = 0; i < 24; i++) { if(heure[i] != "") { printf heure[i] "\n\n" } } }' "$fichierSortie" > "$fichierPlot"
+
+			#Generation graphique via gnuplot
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Graphique sans nom"
+			set xlabel "Jour"
+			set ylabel "Pression (Pa)"
+			set datafile separator ";"
+			set xdata time
+			set timefmt '%Y%m%d'
+			set xtics rotate by 45 offset -2,-1.5
+			set style line 2  lc rgb '#0025ad' lt 1 lw 1.5 # --- blue
+			set style line 3  lc rgb '#0042ad' lt 1 lw 1.5 #      .
+			set style line 4  lc rgb '#0060ad' lt 1 lw 1.5 #      .
+			set style line 5  lc rgb '#007cad' lt 1 lw 1.5 #      .
+			set style line 6  lc rgb '#0099ad' lt 1 lw 1.5 #      .
+			set style line 7  lc rgb '#00ada4' lt 1 lw 1.5 #      .
+			set style line 8  lc rgb '#00ad88' lt 1 lw 1.5 #      .
+			set style line 9  lc rgb '#00ad6b' lt 1 lw 1.5 #      .
+			set style line 10 lc rgb '#00ad4e' lt 1 lw 1.5 #      .
+			set style line 11 lc rgb '#00ad31' lt 1 lw 1.5 #      .
+			set style line 12 lc rgb '#00ad14' lt 1 lw 1.5 #      .
+			set style line 13 lc rgb '#09ad00' lt 1 lw 1.5 # --- green
+			plot "$fichierPlot" using 1:4 with lines ls 2 lw 2 title "aza"
+			EOFMarker
+
+		;;
 		*)
 			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
 			exit 4 ;;
