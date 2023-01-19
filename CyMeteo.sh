@@ -406,6 +406,5 @@ for type in $typeDonne ; do
 		*)
 			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
 			exit 4 ;;
-
 	esac
 done
