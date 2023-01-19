@@ -57,6 +57,14 @@ nomProgrammeTri="exec"
 nomDossierC="PROJET-INFO CY-METEO-C"
 
 donneBrute=""
+donnee=""
+
+#Fichier de sortie du programme C
+fichierSortie="sortie.csv"
+#Fichier de donnée a trié (pour le programme C)
+fichierEntree="entree.csv"
+#Fichier de donnée de plot
+fichierPlot="fichierPlot.cymeteo"
 
 typeDonne=""
 position=""
@@ -79,7 +87,7 @@ for arg in $(seq 1 $#) ; do
 		# $ : indique la fin de la ligne (necessaire)
 		# ^ ; indique le début de la ligne (necessaire)
 		# source  : https://fr.wikipedia.org/wiki/Expression_r%C3%A9guli%C3%A8re 
-		if [[ ! "${!arg}" =~ ^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$ ]] ; then
+		if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
 			echo "La valeur <min> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
 			exit 1;
 		fi
@@ -88,7 +96,7 @@ for arg in $(seq 1 $#) ; do
 
 	#valeur <max> de l'option -d
 	elif [ $passerCase -eq 1 ] ; then
-		if [[ ! "${!arg}" =~ [0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] ; then
+		if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
 			echo "La valeur <max> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
 			exit 1;
 		fi
@@ -181,13 +189,19 @@ fi
 
 #Vérification du fichier de donnée
 if [ ! -r "$cheminFichier" ] ; then
-	echo "Impossible de lire le fichier $cheminFichier. Vérifier les permissions associés."
+	echo "Impossible de lire le fichier $cheminFichier. Vérifier les permissions associés." >&2
 	exit 2
 fi
 
 if [ "$enteteFichier" != "$(head -n1 "$cheminFichier")" ] ; then
-	echo "Le fichier n'est pas au bon format."
+	echo "Le fichier n'est pas au bon format." >&2
 	exit 2
+fi
+
+#Vérification ordre parametre valeur min max de l'argument -d
+if [ "$tempsMin" \> "$tempsMax" ] ; then
+	echo "La valeur min de l'argument -d est supèrieur a celle de max. Utilisez --help pour voir comment marche le script" >&2
+	exit 1
 fi
 
 #Vérification du fichier C
@@ -198,43 +212,195 @@ if [ ! -f "$nomProgrammeTri" ] ; then
 fi
 
 #Traitement restriction geographique
-case  $position in
-	"")
-		donneBrute=$(tail -n+2 "$cheminFichier") ;;
-	
-	#France : code postal
-	-F) donneBrute=$(grep ";[0-8][0-9abAB][0-9][0-9][0-9]$\|;9[0-5][0-9][0-9][0-9]$" "$cheminFichier") ;;
+if [ "$position" != "" ] ; then
+	case $position in
+		#France : code postal
+		-F) donneBrute=$(grep ";[0-8][0-9abAB][0-9][0-9][0-9]$\|;9[0-5][0-9][0-9][0-9]$" "$cheminFichier") ;;
 
-	#Guyane : code postal
-	-G) donneBrute=$(grep ";973[0-9][0-9]$" "$cheminFichier");;
+		#Guyane : code postal
+		-G) donneBrute=$(grep ";973[0-9][0-9]$" "$cheminFichier");;
 
-	#St Pierre et Miquelon : code postal + coord. géo (ile sans code postal a proximité)
-	-S) donneBrute=$(grep ";975[0-9][0-9]$" "$cheminFichier")
-		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(46\.(7[4-9]|[8-9])([0-9])*|47\.(0|1[0-3])([0-9])*|47\.14(0)*),-56\.(1[3-9]([0-9])*|[2-3]([0-9])*|40(0)*);")" ;;
-	
-	#Antilles : code postal + coord. géo (ile sans code postal)
-	-A) donneBrute=$(grep ";97[127][0-9][0-9]$" "$cheminFichier")
-		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(10\.[8-9]([0-9])*|1[1-8](\.([0-9])*)?|19(\.(0)*)?),-(59\.[4-9]([0-9])*|6[0-6](\.([0-9])*)?|67(\.([0-2]([0-9])*|3(0)*))?);")" ;;
+		#St Pierre et Miquelon : code postal + coord. géo (ile sans code postal a proximité)
+		-S) donneBrute=$(grep ";975[0-9][0-9]$" "$cheminFichier")
+			donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(46\.(7[4-9]|[8-9])([0-9])*|47\.(0|1[0-3])([0-9])*|47\.14(0)*),-56\.(1[3-9]([0-9])*|[2-3]([0-9])*|40(0)*);")" ;;
+		
+		#Antilles : code postal + coord. géo (ile sans code postal)
+		-A) donneBrute=$(grep ";97[127][0-9][0-9]$" "$cheminFichier")
+			donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(10\.[8-9]([0-9])*|1[1-8](\.([0-9])*)?|19(\.(0)*)?),-(59\.[4-9]([0-9])*|6[0-6](\.([0-9])*)?|67(\.([0-2]([0-9])*|3(0)*))?);")" ;;
 
-	#Océan indien : code postal + coord. Geo (iles sans code postal)
-	-O) donneBrute=$(grep ";97[46][0-9][0-9]$\|9841[25]" "$cheminFichier")
-		donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(-60(\.(0)*)?|-[0-5][0-9](\.([0-9])*)?|0(\.(0)*)?),([3-9][0-9](\.([0-9])*)?|10[0-9](\.([0-9])*)?|110(\.(0)*)?);")" ;;
+		#Océan indien : code postal + coord. Geo (iles sans code postal)
+		-O) donneBrute=$(grep ";97[46][0-9][0-9]$\|9841[25]" "$cheminFichier")
+			donneBrute="$donneBrute"$'\n'"$(grep ";$" "$cheminFichier" | grep -E ";(-60(\.(0)*)?|-[0-5][0-9](\.([0-9])*)?|0(\.(0)*)?),([3-9][0-9](\.([0-9])*)?|10[0-9](\.([0-9])*)?|110(\.(0)*)?);")" ;;
 
-	#Antartique : coord. geo inf. ou egal 60° sud
-	-Q) donneBrute=$(grep ";$" "$cheminFichier" | grep -E ";-([6-9][0-9](\.([0-9])*)?|1[0-8][0-9](\.([0-9])*)?),.*;") ;;
+		#Antartique : coo	rd. geo inf. ou egal 60° sud
+		-Q) donneBrute=$(grep ";$" "$cheminFichier" | grep -E ";-([6-9][0-9](\.([0-9])*)?|1[0-8][0-9](\.([0-9])*)?),.*;") ;;
 
-	*)
-		echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)."
-		exit 4 ;;
-esac
+		*)
+			echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)."
+			exit 4 ;;
+	esac
+
+	#Application restriction temporel
+	if [ "$tempsMax" != "" ] ; then
+		donneBrute="$(echo "$donneBrute" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if(tempsMin <= date && date <= tempsMax){ print } }')"
+	fi
+else
+	#Application restriction temporel ou mise de valeur par defaut
+	if [ "$tempsMax" != "" ] ; then
+		donneBrute=$(tail -n+2 "$cheminFichier" | awk -v tempsMin="$tempsMin" -v tempsMax="$tempsMax" -F";" '{ date=substr($2,1,10) ; if(tempsMin <= date && date <= tempsMax){ print } }')
+	else
+		donneBrute=$(tail -n+2 "$cheminFichier")
+	fi
+fi
 
 #Traitement de chaque type de donnée
 for type in $typeDonne ; do
 	echo "$type"
-
 	case $type in
-		
-	
+		-[tp]1)
+			#Colone température : 11
+			if [ "$type" == "-t1" ] ; then
+				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
+				donnee="$(echo "$donneBrute" | cut -d";" -f1,11 | grep -v ";$")"
+			#Cas -p1
+			#Colone pression : 7
+			else
+				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
+				donnee="$(echo "$donneBrute" | cut -d";" -f1,7 | grep -v ";$")"
+			fi
+
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			sort "$fichierEntree" > "$fichierSortie"
+
+			#Calcule moyenne, min et max
+			awk -F ';' 'BEGIN { num="" ; n=0 ; m=0 } { if(num!=$1){ if(n!=0){print m";"sum/n";"min";"max";"num} num=$1 ; min=$2 ; max=$2 ; n=0 ; sum=0 ; m+=1 } sum+=$2 ; n+=1 ; if($2<min){min=$2} if($2>max){max=$2} } END {print m";"sum/n";"min";"max";"num}' "$fichierSortie" > "$fichierPlot"
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Pression en fonction de la station"
+			set xlabel "ID Station"
+			set ylabel "Pression (Pa)"
+			set datafile separator ";"
+			Shadecolor = "#80E0A080"
+			set xtics rotate by 45 offset -2,-1.5
+			plot "$fichierPlot" using 1:4:3 with filledcurve fc rgb Shadecolor title "Plage des pressions", ''using 1:2:xtic(5) lw 2 with linespoints title "Pression moyenne"
+			EOFMarker
+
+		;;
+
+		-[tp]2)
+			if [ "$type" == "-t2" ] ; then
+				#Récupèration date et heure convertie et pression
+				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($11 != "") {"date -d\""$2"\" -u +%Y%m%d%H"|getline out ; print out";"$11} }')"
+			
+			#Cas -p2
+			else
+				#Récupèration date et heure convertie et pression
+				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($7 != "") {"date -d\""$2"\" -u +%Y%m%d%H"|getline out ; print out";"$7} }')"
+			fi
+
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			sort "$fichierEntree" > "$fichierSortie"
+
+			#Calcule moyenne
+			awk -F ';' 'BEGIN { date="" ; n=0 } { if(date!=$1){ if(n!=0){print date";"sum/n} date=$1 ; n=0 ; sum=0 } sum+=$2 ; n+=1 } END {print date";"sum/n}' "$fichierSortie" > "$fichierPlot"
+			
+			#Generation graphique via gnuplot
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Pression en fonction du jour"
+			set xlabel "Jour"
+			set ylabel "Pression (Pa)"
+			set datafile separator ";"
+			set xdata time
+			set timefmt '%Y%m%d%H'
+			set xtics rotate by 45 offset -2,-1.5
+			plot "$fichierPlot" using 1:2 lw 2 smooth acsplines title "Pression moyenne"
+			EOFMarker
+			;;
+			
+
+		-[tp]3)
+			echo "Marche PAS"
+			#Il faut trier en fonction de la date PUIS du numéro de station, donc le format seras particulier : 
+			#on met la date PUIS le numéro de station coller l'un a l'autre
+			if [ "$type" == "-t3" ] ; then
+				#Récupèration date et station avec heure et pression
+				donnee="$(echo "$donneBrute" | awk -F';' '{ if($11!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$11 } }')"
+			
+			#Cas -p2
+			else
+				#Récupèration date et station avec heure et température
+				donnee="$(echo "$donneBrute" | awk -F';' '{ if($7!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$7 } }')"
+			fi
+
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			sort "$fichierEntree" > "$fichierSortie"
+
+			#Opération poste trie : on met chaque heure dans une case differente
+			awk -F';' 'BEGIN { for(i = 0; i < 24; i++) {heure[i]=""} } \
+						     { heure[$2]=heure[$2] substr($1,1,8)";"substr($1,9)";"$2";"$3"\n" } \
+					   END   { for(i = 0; i < 24; i++) { if(heure[i] != "") { printf heure[i] "\n\n" } } }' "$fichierSortie" > "$fichierPlot"
+
+			#Generation graphique via gnuplot
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Graphique sans nom"
+			set xlabel "Jour"
+			set ylabel "Pression (Pa)"
+			set datafile separator ";"
+			set xdata time
+			set timefmt '%Y%m%d'
+			set xtics rotate by 45 offset -2,-1.5
+			set style line 2  lc rgb '#0025ad' lt 1 lw 1.5 # --- blue
+			set style line 3  lc rgb '#0042ad' lt 1 lw 1.5 #      .
+			set style line 4  lc rgb '#0060ad' lt 1 lw 1.5 #      .
+			set style line 5  lc rgb '#007cad' lt 1 lw 1.5 #      .
+			set style line 6  lc rgb '#0099ad' lt 1 lw 1.5 #      .
+			set style line 7  lc rgb '#00ada4' lt 1 lw 1.5 #      .
+			set style line 8  lc rgb '#00ad88' lt 1 lw 1.5 #      .
+			set style line 9  lc rgb '#00ad6b' lt 1 lw 1.5 #      .
+			set style line 10 lc rgb '#00ad4e' lt 1 lw 1.5 #      .
+			set style line 11 lc rgb '#00ad31' lt 1 lw 1.5 #      .
+			set style line 12 lc rgb '#00ad14' lt 1 lw 1.5 #      .
+			set style line 13 lc rgb '#09ad00' lt 1 lw 1.5 # --- green
+			plot "$fichierPlot" using 1:4 with lines ls 2 lw 2 title "aza"
+			EOFMarker
+
+		;;
+
+		-w)
+			#Formatage des données
+			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $4 != "" && $5 != "" ){split($10, coord, ",") ; print $1";"coord[1]";"coord[2]";"$4";"$5} }')"
+			
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			sort "$fichierEntree" > "$fichierSortie"
+
+			#Calcule moyenne
+			awk -F ';' 'BEGIN { num="" ; force=0 ; direction=0 ; n=0 } { if(num!=$1){ if(n!=0){print num";"$2";"$3";"direction/n";"force/n} num=$1 ; n=0 ; direction=0 ; force = 0 } direction+=$4 ; force+=$5 ; n+=1 } END {print num";"$2";"$3";"direction/n";"force/n}' "$fichierSortie" > "$fichierPlot"
+
+			#Generation graphique via gnuplot
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Moyenne force et direction moyen du vent"
+			set xlabel "Coord. Nord"
+			set ylabel "Coord. Est"
+			set datafile separator ";"
+			set angles degrees
+			plot "Ressources/Carte.png" binary filetype=png origin=(-180,-90) dx=0.2093 dy=0.2093 w rgbimage, "$fichierPlot" using 3:2:(sin(\$4)/\$5)*30:(cos(\$4)/\$5)*30 w vec
+			EOFMarker
+			;;
 		*)
 			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
 			exit 4 ;;
