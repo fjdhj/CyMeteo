@@ -398,7 +398,9 @@ for type in $typeDonne ; do
 			set ylabel "Coord. Est"
 			set datafile separator ";"
 			set angles degrees
-			plot "Ressources/Carte.png" binary filetype=png origin=(-180,-90) dx=0.2093 dy=0.2093 w rgbimage, "$fichierPlot" using 3:2:(sin(\$4)/\$5)*30:(cos(\$4)/\$5)*30 w vec
+			set xrange [-180:180]
+			set yrange [-90:90]
+			plot "Ressources/Carte.png" binary filetype=png origin=(-180,-90) dx=0.2093 dy=0.2093 w rgbimage, "$fichierPlot" using 3:2:(sin(\$4)/\$5)*30:(cos(\$4)/\$5)*30 w vec title "Direction et force moyenne du vent" lc rgbcolor "red"
 			EOFMarker
 			;;
 		*)
