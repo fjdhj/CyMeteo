@@ -236,7 +236,7 @@ if [ "$position" != "" ] ; then
 		-Q) donneBrute=$(grep ";$" "$cheminFichier" | grep -E ";-([6-9][0-9](\.([0-9])*)?|1[0-8][0-9](\.([0-9])*)?),.*;") ;;
 
 		*)
-			echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)."
+			echo "Erreur grave, le cas $position n'est pas traité (restriction geographique)." >&2
 			exit 4 ;;
 	esac
 
@@ -387,7 +387,86 @@ for type in $typeDonne ; do
 			sort "$fichierEntree" > "$fichierSortie"
 
 			#Calcule moyenne
-			awk -F ';' 'BEGIN { num="" ; force=0 ; direction=0 ; n=0 } { if(num!=$1){ if(n!=0){print num";"$2";"$3";"direction/n";"force/n} num=$1 ; n=0 ; direction=0 ; force = 0 } direction+=$4 ; force+=$5 ; n+=1 } END {print num";"$2";"$3";"direction/n";"force/n}' "$fichierSortie" > "$fichierPlot"
+			awk -F ';' 'BEGIN { num="" ; force=0 ; direction=0 ; n=0 ; ns=0 ; eo=0 } { if(num!=$1){ if(n!=0){print num";"ns";"eo";"direction/n";"force/n} num=$1 ; n=0 ; direction=0 ; force = 0 ; ns=$2 ; eo=$3 } direction+=$4 ; force+=$5 ; n+=1 } END {print num";"ns";"eo";"direction/n";"force/n}' "$fichierSortie" > "$fichierPlot"
+
+			#Récupèration x et y min/max en fonction de la zone géographique
+			case $position in
+				#Rien
+				"")
+					xmin=-180
+					xmax=180
+					ymin=-90
+					ymax=90
+					nom=Ressources/Carte.png
+				;;
+
+				#France
+				-F)
+					xmin=-14
+					xmax=18
+					ymin=38
+					ymax=54
+					nom=Ressources/CarteFrance.png
+				;;
+
+				#Guyane
+				-G)
+					xmin=-70
+					xmax=-36
+					ymin=-5
+					ymax=12
+					nom=Ressources/CarteGuyane.png
+				;;
+
+				#St Pierre et Miquelon
+				-S)
+					xmin=-71
+					xmax=-41
+					ymin=38
+					ymax=53
+					nom=Ressources/CarteStPierre.png
+				;;
+				
+				#Antilles
+				-A) 
+					xmin=-72
+					xmax=-48
+					ymin=8
+					ymax=20
+					nom=Ressources/CarteAntilles.png
+				;;
+
+				#Océan indien
+				-O)
+					xmin=30
+					xmax=124
+					ymin=-56
+					ymax=-9
+					nom=Ressources/CarteOceanIndien.png
+				;;
+
+				#Antartique
+				-Q)
+					xmin=56
+					xmax=180
+					ymin=-90
+					ymax=-28
+					nom=Ressources/CarteAntartique.png
+				;;
+
+				#Erreur
+				*)
+					echo "Erreur grave, le cas $position n'est pas traité (restriction geographique mode -w)."
+					echo "Utilisation valeur par défaut"
+					xmin=-180
+					xmax=180
+					ymin=-90
+					ymax=90
+					nom=Ressources/Carte.png
+				;;
+			esac
+
+			scalaire=$(echo "($xmax - $xmin)/1720" | bc -l)
 
 			#Generation graphique via gnuplot
 			gnuplot <<-EOFMarker
@@ -398,9 +477,9 @@ for type in $typeDonne ; do
 			set ylabel "Coord. Est"
 			set datafile separator ";"
 			set angles degrees
-			set xrange [-180:180]
-			set yrange [-90:90]
-			plot "Ressources/Carte.png" binary filetype=png origin=(-180,-90) dx=0.2093 dy=0.2093 w rgbimage, "$fichierPlot" using 3:2:(sin(\$4)/\$5)*30:(cos(\$4)/\$5)*30 w vec title "Direction et force moyenne du vent" lc rgbcolor "red"
+			set xrange [$xmin:$xmax]
+			set yrange [$ymin:$ymax]
+			plot "$nom" binary filetype=png origin=($xmin,$ymin) dx=$scalaire dy=$scalaire w rgbimage, "$fichierPlot" using 3:2:(sin(\$4)/\$5)*$scalaire*300:(cos(\$4)/\$5)*$scalaire*300 w vec title "Direction et force moyenne du vent" lc rgbcolor "red"
 			EOFMarker
 			;;
 		*)
