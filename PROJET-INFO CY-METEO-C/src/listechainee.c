@@ -3,8 +3,8 @@
 // Fonction permetant de creer un chainon d'une liste
 pChainon creationchainon(float* tab)
 {
-    pChainon new = malloc(sizeof(Chainon));
-    if(PTR_NUL(new))
+    pChainon nouveau = malloc(sizeof(Chainon));
+    if(PTR_NUL(nouveau))
     {
         ERREUR_ALLOCATION;
         exit(3); // Code d'erreur interne
@@ -13,12 +13,12 @@ pChainon creationchainon(float* tab)
     // Affecte toute les valeurs du tableau dans le chainon
     for(int i = 0; i < TAILLE; i++)
     {
-        new->tab[i] = tab[i];
+        nouveau->tab[i] = tab[i];
     }
     
-    new->suivant = NULL;
+    nouveau->suivant = NULL;
 
-    return new;
+    return nouveau;
 }
 
 // Insert un nouveau chainon dans la liste passe en parametre
@@ -30,9 +30,9 @@ pChainon insertdebut(pChainon pliste, float* tab)
         return NULL;
     }
 
-    pChainon new = creationchainon(tab);
-    new->suivant = pliste;
-    return new;
+    pChainon nouveau = creationchainon(tab);
+    nouveau->suivant = pliste;
+    return nouveau;
 }
 
 // Insert un nouveau chainon à la fin de la liste en parametre
@@ -103,16 +103,18 @@ pChainon trier_listechainee(pChainon pliste)
 pChainon triebulle(pChainon pliste)
 {
     bool est_trie = false;
+    bool peut_trier = false;
     pChainon current = pliste;
     float temp[TAILLE] = {0};
 
-    while(est_trie == false)
+    while(!est_trie)
     {
         est_trie = true;
         current = pliste;
 
         while(!PTR_NUL(current->suivant))
         {
+            // On compare chaque valeurs du tableau pour savoir si un trie est necessaire
             if(current->tab[0] > current->suivant->tab[0])
             {
                 est_trie = false;
@@ -124,12 +126,14 @@ pChainon triebulle(pChainon pliste)
             }
 
             current = current->suivant;
+            peut_trier = false;
         }
 
     }
 
     return pliste;
 }
+
 
 // Affiche un seul chainon de la liste
 void traiter(pChainon pliste)
@@ -164,3 +168,26 @@ void traiterListe(pChainon pliste)
         current = current->suivant;
     }
 }
+
+
+/*
+void main()
+{
+    float tab[TAILLE] = {0, 1, 1, 1, 1};
+    float tab2[TAILLE] = {1, 0, 1, 1, 10};
+    float tab3[TAILLE] = {1, 4, 1, 1, 1};
+    float tab4[TAILLE] = {2, 1, 1, 1, 100};
+    pChainon a = creationchainon(tab3);
+    insertfin(a, tab);
+    insertfin(a, tab);
+    insertfin(a, tab);
+    insertfin(a, tab);
+
+    for(int i = 0; i < 100000; i++)
+    {
+        insertfin(a, tab);
+    }
+
+    a = triebulle(a);
+    //traiterListe(a);
+}*/
