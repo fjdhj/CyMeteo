@@ -11,3 +11,6 @@
 
 #Ignorer les fichier de compilation
 *.o
+
+#Ignorer les fichier PNG
+*.png
