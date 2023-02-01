@@ -482,6 +482,10 @@ for type in $typeDonne ; do
 			plot "$nom" binary filetype=png origin=($xmin,$ymin) dx=$scalaire dy=$scalaire w rgbimage, "$fichierPlot" using 3:2:(sin(\$4)/\$5)*$scalaire*300:(cos(\$4)/\$5)*$scalaire*300 w vec title "Direction et force moyenne du vent" lc rgbcolor "red"
 			EOFMarker
 			;;
+		
+		-h)
+
+		;;
 		*)
 			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
 			exit 4 ;;
