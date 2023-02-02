@@ -1,7 +1,7 @@
 #include "../include/listechainee.h"
 
 // Fonction permetant de creer un chainon d'une liste
-pChainon creationchainon(float* tab)
+pChainon creationchainon(float* tab, int taille)
 {
     pChainon nouveau = malloc(sizeof(Chainon));
     if(PTR_NUL(nouveau))
@@ -10,8 +10,11 @@ pChainon creationchainon(float* tab)
         exit(3); // Code d'erreur interne
     }
 
+    // Declare dynamiquement le tableau car les tailles peuvent varrier d'une execution à l'autre
+    nouveau->tab = malloc(sizeof(float) * taille);
+    
     // Affecte toute les valeurs du tableau dans le chainon
-    for(int i = 0; i < TAILLE; i++)
+    for(int i = 0; i < taille; i++)
     {
         nouveau->tab[i] = tab[i];
     }
@@ -21,31 +24,18 @@ pChainon creationchainon(float* tab)
     return nouveau;
 }
 
-// Insert un nouveau chainon dans la liste passe en parametre
-pChainon insertdebut(pChainon pliste, float* tab)
-{
-    if(PTR_NUL(pliste))
-    {
-        LISTE_VIDE;
-        return NULL;
-    }
-
-    pChainon nouveau = creationchainon(tab);
-    nouveau->suivant = pliste;
-    return nouveau;
-}
 
 // Insert un nouveau chainon à la fin de la liste en parametre
-pChainon insertfin(pChainon pliste, float* tab)
+pChainon insertfin(pChainon pliste, float* tab, int taille)
 {
     if(PTR_NUL(pliste))
     {
-        LISTE_VIDE;
-        return NULL;
+        pliste = creationchainon(tab, taille);
+        return pliste;
     }
 
     pChainon current = pliste;
-    pChainon new = creationchainon(tab);
+    pChainon new = creationchainon(tab, taille);
 
     // Nous parcourons la liste tant qu'il y a des suivant
     while(!PTR_NUL(current->suivant))
@@ -59,84 +49,74 @@ pChainon insertfin(pChainon pliste, float* tab)
 }
 
 
-
-// Trie la liste d'une methode de trie par insertion (En triant les chainons en eux meme)
-pChainon trier_listechainee(pChainon pliste)
+// Trie la liste chainée en suivant la methode du trie fusion
+pChainon tri_fusion(pChainon pliste)
 {
-    pChainon sorted = NULL;
-    pChainon current = pliste;
-    
-    while (!PTR_NUL(current)) 
+    if(PTR_NUL(pliste) || PTR_NUL(pliste->suivant))
     {
-        pChainon next = current->suivant;
-
-        // Trouver l'emplacement correct pour le chaînon courant dans la liste triée
-        pChainon ptr = sorted; // Premier chainon de la liste trié
-        pChainon prev = NULL;
-        
-        while (!PTR_NUL(ptr) && ptr->tab[0] < current->tab[0]) 
-        {
-            prev = ptr;
-            ptr = ptr->suivant;
-        }
-
-        // Insérer le chaînon courant dans la liste triée
-        if (PTR_NUL(prev)) 
-        {
-            current->suivant = sorted;
-            sorted = current;
-        }
-        else 
-        {
-            current->suivant = ptr;
-            prev->suivant = current;
-        }
-
-        current = next;
-    } 
-
-    // Retourner la référence à la tête de la liste triée
-    return sorted;
-}
-
-// Trie la liste en triant ces valeurs par une methode de trie à bulle
-pChainon triebulle(pChainon pliste)
-{
-    bool est_trie = false;
-    bool peut_trier = false;
-    pChainon current = pliste;
-    float temp[TAILLE] = {0};
-
-    while(!est_trie)
-    {
-        est_trie = true;
-        current = pliste;
-
-        while(!PTR_NUL(current->suivant))
-        {
-            // On compare chaque valeurs du tableau pour savoir si un trie est necessaire
-            if(current->tab[0] > current->suivant->tab[0])
-            {
-                est_trie = false;
-                
-                // On intervertit la valeurs des deux chainons en compiant leurs valeur
-                memcpy(temp, current->tab, sizeof(float) * TAILLE);
-                memcpy(current->tab, current->suivant->tab, TAILLE * sizeof(float));
-                memcpy(current->suivant->tab, temp, TAILLE * sizeof(float));
-            }
-
-            current = current->suivant;
-            peut_trier = false;
-        }
-
+        return pliste;
     }
 
-    return pliste;
+    // Casse la liste en deux
+    pChainon gauche = pliste;
+    pChainon droite = milieu(pliste);
+    pChainon temp = droite->suivant;
+
+
+    droite->suivant = NULL;
+    droite = temp;
+
+    gauche = tri_fusion(gauche);
+    droite = tri_fusion(droite);
+
+    return fusionner(gauche, droite);
+}
+
+pChainon milieu(pChainon pliste)
+{
+    pChainon courant = pliste;
+    pChainon suivant = pliste->suivant;
+
+    while(!PTR_NUL(suivant) && !PTR_NUL(suivant->suivant))
+    {
+        courant = courant->suivant;
+        suivant = suivant->suivant->suivant;
+    }
+
+    return courant;
+
+}
+
+pChainon fusionner(pChainon gauche, pChainon droite) 
+{
+    pChainon result = NULL;
+
+    if (!gauche) 
+    {
+        return droite;
+    }
+    else if (!droite) 
+    {
+        return gauche;
+    }
+
+    // Le trie se base sur la comparaison entre les valeurs de tab[0]
+    if (gauche->tab[0] <= droite->tab[0])
+    {
+        result = gauche;
+        result->suivant = fusionner(gauche->suivant, droite);
+    }
+    else 
+    {
+        result = droite;
+        result->suivant = fusionner(gauche, droite->suivant);
+    }
+
 }
 
 
-// Affiche un seul chainon de la liste
-void traiter(pChainon pliste)
+
+void traiter(pChainon pliste, int taille)
 {
     if(PTR_NUL(pliste))
     {
@@ -146,7 +126,7 @@ void traiter(pChainon pliste)
 
     printf("\n");
     
-    for(int i = 0; i < TAILLE; i++)
+    for(int i = 0; i < taille; i++)
     {
         printf("%f", pliste->tab[i]);
         if(i < TAILLE - 1)
@@ -157,12 +137,12 @@ void traiter(pChainon pliste)
 }
 
 // Affiche tous les chainons de la liste
-void traiterListe(pChainon pliste)
+void traiterListe(pChainon pliste, int taille)
 {
     pChainon current = pliste;
     while(!PTR_NUL(current))
     {
-        traiter(current);
+        traiter(current, taille);
         printf("\n");
 
         current = current->suivant;
@@ -177,17 +157,31 @@ void main()
     float tab2[TAILLE] = {1, 0, 1, 1, 10};
     float tab3[TAILLE] = {1, 4, 1, 1, 1};
     float tab4[TAILLE] = {2, 1, 1, 1, 100};
-    pChainon a = creationchainon(tab3);
-    insertfin(a, tab);
-    insertfin(a, tab);
-    insertfin(a, tab);
-    insertfin(a, tab);
+    pChainon a = creationchainon(tab3, TAILLE);
+    insertfin(a, tab, TAILLE);
+    insertfin(a, tab2, TAILLE);
+    insertfin(a, tab3, TAILLE);
+    insertfin(a, tab4, TAILLE);
 
-    for(int i = 0; i < 100000; i++)
+    for(int i = 0; i < (25); i++)
     {
-        insertfin(a, tab);
+        insertfin(a, tab, TAILLE);
+        insertfin(a, tab2, TAILLE);
+        insertfin(a, tab3, TAILLE);
+        insertfin(a, tab4, TAILLE);
     }
-
-    a = triebulle(a);
-    //traiterListe(a);
+    a =  tri_fusion(a);
+    traiterListe(a);
 }*/
+
+
+
+
+
+
+
+
+
+
+
+

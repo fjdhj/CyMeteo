@@ -9,22 +9,21 @@
 //// Crée la structure du chainon
 typedef struct chainon
 {
-    float tab[TAILLE];
+    float* tab;
     struct chainon* suivant;
 }Chainon;
 
 typedef Chainon* pChainon;
 
 //// Établie les définitions des fonctions
-pChainon creationchainon(float* tab);
+pChainon creationchainon(float* tab, int taille);
+pChainon insertfin(pChainon pliste, float* tab, int taille);
+pChainon tri_fusion(pChainon pliste);
+pChainon milieu(pChainon pliste);
+pChainon fusionner(pChainon left, pChainon right) ;
 
-pChainon insertdebut(pChainon pliste, float* tab);
-pChainon insertfin(pChainon pliste, float* tab);
-pChainon trier_listechainee(pChainon pliste);
-pChainon triebulle(pChainon pliste);
-
-void traiter(pChainon pliste);
-void traiterListe(pChainon pliste);
+void traiter(pChainon pliste, int taille);
+void traiterListe(pChainon pliste, int taille);
 
 
 

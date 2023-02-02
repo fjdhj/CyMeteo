@@ -2,23 +2,23 @@
 
 
 // Insert un nouveau noeud en requillibrant l'arbre
-pArbre insertion_AVL(pArbre a, float* tab, int* h)
+pArbre insertion_AVL(pArbre a, float* tab, int* h, int taille)
 {
     if(PTR_NUL(a))
     {
         *h = 1;
-        return creerArbre(tab);
+        return creerArbre(tab, taille);
     }
 
     else if(tab[0] <= a->tab[0])
     {
-        a->fg = insertion_AVL(a->fg, tab, h);
+        a->fg = insertion_AVL(a->fg, tab, h, taille);
         *h = -*h;
     }
 
     else if(tab[0] > a->tab[0])
     {
-        a->fd = insertion_AVL(a->fd, tab, h);
+        a->fd = insertion_AVL(a->fd, tab, h, taille);
     }
 
     // Remplace la valeur d'equilibre du noeud
@@ -80,14 +80,14 @@ pArbre rotationGauche(pArbre a)
 
 pArbre doubleRotationGauge(pArbre a)
 {
-    a->fd = rotationGauche(a);
+    a->fd = rotationDroite(a->fd);
     return rotationGauche(a);
 }
 
 pArbre doubleRotationDroite(pArbre a)
 {
-    a->fg = rotationDroite(a);
-    return rotationGauche(a);
+    a->fg = rotationGauche(a->fg);
+    return rotationDroite(a);
 }
 
 /////
@@ -121,7 +121,7 @@ pArbre equilibrageAVL(pArbre a)
 
 
 
-
+/*
 void main()
 {
     float tab[TAILLE] = {10, 1, 1, 1, 10};
@@ -129,24 +129,24 @@ void main()
     float tab3[TAILLE] = {11, 3};
     float tab4[TAILLE] = {4, 2};
 
-    pArbre a = creerArbre(tab);
+    pArbre a = creerArbre(tab, TAILLE);
     int h = 0;
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
-    a = insertion_AVL(a, tab, &h);
+    a = insertion_AVL(a, tab2, &h, TAILLE);
+    a = insertion_AVL(a, tab3, &h, TAILLE);
+    a = insertion_AVL(a, tab, &h, TAILLE);
+    a = insertion_AVL(a, tab2, &h, TAILLE);
+    a = insertion_AVL(a, tab3, &h, TAILLE);
+    a = insertion_AVL(a, tab4, &h, TAILLE);
+    a = insertion_AVL(a, tab2, &h, TAILLE);
+    a = insertion_AVL(a, tab3, &h, TAILLE);
+    a = insertion_AVL(a, tab2, &h, TAILLE);
+    a = insertion_AVL(a, tab4, &h, TAILLE);
 
     for(int i = 0; i < 2732342; i++)
     {
-        a = insertion_AVL(a, tab, &h);
+        a = insertion_AVL(a, tab, &h, TAILLE);
     }
 
-    //parcour_infixe(a);
-}
+    parcour_infixe(a);
+}*/
 
