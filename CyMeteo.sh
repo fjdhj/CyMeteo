@@ -41,8 +41,11 @@ aide() {
 	echo "  0: pas de problème lors de l'execution"
 	echo "  1: erreur avec les arguments du script"
 	echo "  2: probleme avec le fichier (ouverture/lecture impossible, mauvais format de données, ..."
-	echo "	3: "
-	echo "	4: Un erreur grave lors du déroulement du programme" 
+	echo "  3x: probleme avec le programme C, x correspond a un chiffre 1, 2 ou 3 qui sont les valeurs de retour possible du programme C, a savoir"
+	echo "      31 : il y a un problème avec les arguments donnée au programme C"
+	echo "      32 : il y a un problème avec les fichiers donnée au programme C (lecture/ecriture/acces)"
+	echo "      33 : il y a une autre erreur interne au programme C"
+	echo "  4: Un erreur grave lors du déroulement du programme" 
 	echo
 }
 
@@ -73,46 +76,7 @@ tempsMin=""
 tempsMax=""
 cheminFichier=""
 
-#Variable utilisé pour passer le case et traiter les argument autrement
-#Si la variable est positive, on récupère les arguments complémentaire de l'option -d
-#Si la variable est négative, on récupère l'argument complémentaire de l'option -f
-passerCase=0
-
-for arg in $(seq 1 $#) ; do
-
-	#Valeur <min> de l'option -d
-	if [ $passerCase -eq 2 ] ; then
-		# [0-9] : indique l'ensemble des charactère de 0 à 9 (donc les chiffres)
-		# {n} : indique le l'expression presedente est répété n fois
-		# $ : indique la fin de la ligne (necessaire)
-		# ^ ; indique le début de la ligne (necessaire)
-		# source  : https://fr.wikipedia.org/wiki/Expression_r%C3%A9guli%C3%A8re 
-		if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
-			echo "La valeur <min> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
-			exit 1;
-		fi
-		tempsMin=${!arg}
-		passerCase=$(( passerCase - 1 ))
-
-	#valeur <max> de l'option -d
-	elif [ $passerCase -eq 1 ] ; then
-		if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
-			echo "La valeur <max> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
-			exit 1;
-		fi
-		tempsMax=${!arg}
-		passerCase=$(( passerCase - 1 ))
-	
-	#valeur <cheminFichierDonnee> de l'option -f
-	elif [ $passerCase -eq -1 ] ; then
-		if [ ! -f "${!arg}" ] ; then
-			echo "${!arg} n'est pas un fichier. Utillisez --help pour voir comment utiliser le script" >&2
-			exit 1;
-		fi
-		cheminFichier=${!arg}
-		passerCase=$((passerCase + 1))
-	
-	else
+for ((arg = 1 ; arg <= $# ; arg++)) ; do
 		case "${!arg}" in
 			
 			#Aide (--help)
@@ -145,31 +109,72 @@ for arg in $(seq 1 $#) ; do
 				if [ "$tempsMin" != "" ] ; then
 					echo "Mauvais argument, le parametre -d ne peux être spécifié deux fois. Utilisez --help pour voir comment utiliser le script" >&2
 				fi
-				passerCase=2 ;;
+
+				if [ $arg == $# ] ; then
+					echo "Argument -d incomplet (il manque la valeur min), utilisez --help pour voir comment utiliser le script" >&2
+					exit 1
+				fi
+
+				arg=$((arg + 1))
+				
+				#Valeur <min> de l'option -d
+				# [0-9] : indique l'ensemble des charactère de 0 à 9 (donc les chiffres)
+				# {n} : indique le l'expression presedente est répété n fois
+				# $ : indique la fin de la ligne (necessaire)
+				# ^ ; indique le début de la ligne (necessaire)
+				# source  : https://fr.wikipedia.org/wiki/Expression_r%C3%A9guli%C3%A8re 
+				if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
+					echo "La valeur <min> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
+					exit 1;
+				fi
+				tempsMin=${!arg}
+
+				if [ $arg == $# ] ; then
+					echo "Argument -d incomplet (il manque la valeur max), utilisez --help pour voir comment utiliser le script" >&2
+					exit 1
+				fi
+
+				arg=$((arg + 1))
+
+				#valeur <max> de l'option -d
+				if [[ ! "${!arg}" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] ; then
+					echo "La valeur <max> de l'option -d est incorrecte. Utilisez --help pour voir comment utiliser le script" >&2
+					exit 1;
+				fi
+				tempsMax=${!arg}
+
+				if [ "$tempsMin" \> "$tempsMax" ] ; then
+					echo "La valeur <min> de l'option -d est plus grande que la valeur <max>. Utilisez --help pour voir comment utiliser le script" >&2
+					exit 1;
+				fi
+				;;
 
 			-f)
 				if [ "$cheminFichier" != "" ] ; then
 					echo "Le chemin vers le fichier ne peut pas être spécifié deux fois. Utilisez --help pour voir comment utiliser le script" >&2
 				fi
-				passerCase=-1 ;;
+
+				if [ $arg == $# ] ; then
+					echo "Argument -f incomplet, utilisez --help pour voir comment utiliser le script" >&2
+					exit 1
+				fi
+
+				arg=$((arg + 1))
+
+				if [ ! -f "${!arg}" ] ; then
+					echo "${!arg} n'est pas un fichier. Utillisez --help pour voir comment utiliser le script" >&2
+					exit 1;
+				fi
+				cheminFichier=${!arg}
+
+				;;
 
 			#L'argument n'existe pas
 			*)
 				echo "Mauvais argument, utilisez --help pour voir comment utiliser le script" >&2 
 				exit 1 ;;
 		esac
-	fi
 done
-
-if [ $passerCase -gt 0 ] ; then
-	echo "Argument -d incomplet, utilisez --help pour voir comment utiliser le script" >&2
-	exit 1
-fi
-
-if [ $passerCase -lt 0 ] ; then
-	echo "Argument -f incomplet, utilisez --help pour voir comment utiliser le script" >&2
-	exit 1
-fi
 
 #Vérification argument obligatoire
 if [ "$cheminFichier" == "" ] ; then
@@ -262,31 +267,35 @@ for type in $typeDonne ; do
 			if [ "$type" == "-t1" ] ; then
 				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
 				donnee="$(echo "$donneBrute" | cut -d";" -f1,11 | grep -v ";$")"
+				nomValeur="Température"
+				unite="°C"
 			#Cas -p1
 			#Colone pression : 7
 			else
 				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
 				donnee="$(echo "$donneBrute" | cut -d";" -f1,7 | grep -v ";$")"
+				nomValeur="Pression"
+				unite="Pa"
 			fi
 
 			#Tri des donnée
 			echo "Appel fonction C pas encore implémenté"
 			echo "$donnee" > "$fichierEntree"
-			sort "$fichierEntree" > "$fichierSortie"
+			sort -t";" -k1 "$fichierEntree" > "$fichierSortie"
 
 			#Calcule moyenne, min et max
-			awk -F ';' 'BEGIN { num="" ; n=0 ; m=0 } { if(num!=$1){ if(n!=0){print m";"sum/n";"min";"max";"num} num=$1 ; min=$2 ; max=$2 ; n=0 ; sum=0 ; m+=1 } sum+=$2 ; n+=1 ; if($2<min){min=$2} if($2>max){max=$2} } END {print m";"sum/n";"min";"max";"num}' "$fichierSortie" > "$fichierPlot"
+			awk -F ';' 'BEGIN { num="" ; n=0 } { if(num!=$1){ if(n!=0){print sum/n";"min";"max";"num} num=$1 ; min=$2 ; max=$2 ; n=0 ; sum=0 } sum+=$2 ; n+=1 ; if($2<min){min=$2} if($2>max){max=$2} } END {print sum/n";"min";"max";"num}' "$fichierSortie" > "$fichierPlot"
 			
 			gnuplot <<-EOFMarker
 			set terminal png size 1920,1080
 			set output "out.png"
-			set title "Pression en fonction de la station"
+			set title "$nomValeur en fonction de la station"
 			set xlabel "ID Station"
-			set ylabel "Pression (Pa)"
+			set ylabel "$nomValeur ($unite)"
 			set datafile separator ";"
 			Shadecolor = "#80E0A080"
 			set xtics rotate by 45 offset -2,-1.5
-			plot "$fichierPlot" using 1:4:3 with filledcurve fc rgb Shadecolor title "Plage des pressions", ''using 1:2:xtic(5) lw 2 with linespoints title "Pression moyenne"
+			plot "$fichierPlot" using 0:3:2 with filledcurve fc rgb Shadecolor title "Plage de $nomValeur", ''using 0:1:xtic(4) lw 2 with linespoints title "$nomValeur moyenne"
 			EOFMarker
 
 		;;
@@ -295,6 +304,14 @@ for type in $typeDonne ; do
 			if [ "$type" == "-t2" ] ; then
 				#Récupèration date et heure convertie et pression
 				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($11 != "") {"date -d\""$2"\" -u +%Y%m%d%H"|getline out ; print out";"$11} }')"
+				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($11 != "") {
+					annee=
+					mois=
+					jour=
+					heure=
+
+				} }')"
+
 			
 			#Cas -p2
 			else
@@ -334,7 +351,7 @@ for type in $typeDonne ; do
 				#Récupèration date et station avec heure et pression
 				donnee="$(echo "$donneBrute" | awk -F';' '{ if($11!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$11 } }')"
 			
-			#Cas -p2
+			#Cas -p3
 			else
 				#Récupèration date et station avec heure et température
 				donnee="$(echo "$donneBrute" | awk -F';' '{ if($7!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$7 } }')"
@@ -486,7 +503,7 @@ for type in $typeDonne ; do
 		
 		-h)
 			#Formatage des données
-			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $13 != "" ){split($10, coord, ",") ; print $13";"coord[1]";"coord[2]} }')"
+			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $14 != "" ){split($10, coord, ",") ; print $14";"coord[1]";"coord[2]} }')"
 
 			#Tri des donnée
 			echo "Appel fonction C pas encore implémenté"
@@ -508,7 +525,7 @@ for type in $typeDonne ; do
 			set yrang [*:*] noextend
 
 			set view map
-			set pm3d interpolate 7,7
+			set pm3d interpolate 5,5
 			set dgrid3d
 			splot "$fichierPlot" using 3:2:1 with pm3d title "Hauteur (mètre)"
 			EOFMarker
