@@ -276,6 +276,7 @@ for type in $typeDonne ; do
 
 			#Calcule moyenne, min et max
 			awk -F ';' 'BEGIN { num="" ; n=0 ; m=0 } { if(num!=$1){ if(n!=0){print m";"sum/n";"min";"max";"num} num=$1 ; min=$2 ; max=$2 ; n=0 ; sum=0 ; m+=1 } sum+=$2 ; n+=1 ; if($2<min){min=$2} if($2>max){max=$2} } END {print m";"sum/n";"min";"max";"num}' "$fichierSortie" > "$fichierPlot"
+			
 			gnuplot <<-EOFMarker
 			set terminal png size 1920,1080
 			set output "out.png"
@@ -484,8 +485,64 @@ for type in $typeDonne ; do
 			;;
 		
 		-h)
+			#Formatage des données
+			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $13 != "" ){split($10, coord, ",") ; print $13";"coord[1]";"coord[2]} }')"
 
-		;;
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			sort -t";" -k1 -r "$fichierEntree" > "$fichierSortie"
+
+			uniq "$fichierSortie" > "$fichierPlot"
+
+			#Generation graphique via gnuplot
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Altitude Station"
+			set xlabel "Coord. Nord"
+			set ylabel "Coord. Est"
+			set datafile separator ";"
+			
+			set xrang [*:*] noextend
+			set yrang [*:*] noextend
+
+			set view map
+			set pm3d interpolate 7,7
+			set dgrid3d
+			splot "$fichierPlot" using 3:2:1 with pm3d title "Hauteur (mètre)"
+			EOFMarker
+			;;
+
+		-m)
+			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $6 != "" ){split($10, coord, ",") ; print $1";"$6";"coord[1]";"coord[2]} }')"
+		
+			#Tri des donnée
+			echo "Appel fonction C pas encore implémenté"
+			echo "$donnee" > "$fichierEntree"
+			sort -t";" -k1 -r "$fichierEntree" > "$fichierSortie"
+
+			awk -F ';' 'BEGIN { num="" } { if(num!=$1){ if(num!=""){print num";"max";"x";"y} x=$3 ; y=$4 ; max=$2 ; num=$1 } if($2>max){max=$2} } END {print num";"max";"x";"y}' "$fichierSortie" > "$fichierPlot"
+
+			#Generation graphique via gnuplot
+			gnuplot <<-EOFMarker
+			set terminal png size 1920,1080
+			set output "out.png"
+			set title "Humidité max Station"
+			set xlabel "Coord. Nord"
+			set ylabel "Coord. Est"
+			set datafile separator ";"
+			
+			set xrang [*:*] noextend
+			set yrang [*:*] noextend
+
+			set view map
+			set pm3d interpolate 7,7
+			set dgrid3d
+			splot "$fichierPlot" using 4:3:2 with pm3d title "Hauteur (mètre)"
+			EOFMarker
+			;;
+
 		*)
 			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
 			exit 4 ;;
