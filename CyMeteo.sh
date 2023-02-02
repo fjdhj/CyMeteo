@@ -303,42 +303,46 @@ for type in $typeDonne ; do
 		-[tp]2)
 			if [ "$type" == "-t2" ] ; then
 				#Récupèration date et heure convertie et pression
-				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($11 != "") {"date -d\""$2"\" -u +%Y%m%d%H"|getline out ; print out";"$11} }')"
-				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($11 != "") {
-					annee=
-					mois=
-					jour=
-					heure=
-
-				} }')"
-
-			
+				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d%H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f11))"
+				nomValeur="Température"
+				unite="°C"
+				couleur="#ff3333"
 			#Cas -p2
 			else
 				#Récupèration date et heure convertie et pression
-				donnee="$(echo "$donneBrute" | awk -F ";" '{ if($7 != "") {"date -d\""$2"\" -u +%Y%m%d%H"|getline out ; print out";"$7} }')"
+				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d%H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f7))"
+				nomValeur="Pression"
+				unite="Pa"
+				couleur="#1a75ff"
+
 			fi
+
+			time donnee="$(echo "$donnee" | grep -Ev "[[:space:]]$")"
 
 			#Tri des donnée
 			echo "Appel fonction C pas encore implémenté"
 			echo "$donnee" > "$fichierEntree"
-			sort "$fichierEntree" > "$fichierSortie"
+			time sort "$fichierEntree" > "$fichierSortie"
 
 			#Calcule moyenne
-			awk -F ';' 'BEGIN { date="" ; n=0 } { if(date!=$1){ if(n!=0){print date";"sum/n} date=$1 ; n=0 ; sum=0 } sum+=$2 ; n+=1 } END {print date";"sum/n}' "$fichierSortie" > "$fichierPlot"
+			time awk -F ' ' 'BEGIN { date="" ; n=0 } { if(date!=$1){ if(n!=0){print date" "sum/n} date=$1 ; n=0 ; sum=0 } sum+=$2 ; n+=1 } END {print date" "sum/n}' "$fichierSortie" > "$fichierPlot"
 			
 			#Generation graphique via gnuplot
 			gnuplot <<-EOFMarker
 			set terminal png size 1920,1080
 			set output "out.png"
-			set title "Pression en fonction du jour"
+			set title "$nomValeur en fonction du jour"
 			set xlabel "Jour"
-			set ylabel "Pression (Pa)"
-			set datafile separator ";"
+			set ylabel "$nomValeur ($unite)"
+			set datafile separator " "
 			set xdata time
 			set timefmt '%Y%m%d%H'
-			set xtics rotate by 45 offset -2,-1.5
-			plot "$fichierPlot" using 1:2 lw 2 smooth acsplines title "Pression moyenne"
+
+			set xrang [*:*] noextend
+			set yrang [*:*] noextend
+
+			Couleur = "$couleur"
+			plot "$fichierPlot" using 1:2 with lines lw 2 lc rgbcolor "$couleur" title "$nomValeur moyenne"
 			EOFMarker
 			;;
 			
