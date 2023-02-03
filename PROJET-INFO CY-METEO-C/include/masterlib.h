@@ -10,7 +10,7 @@
 
 // Creation de macro et de constantes utiliser dans tous les fichiers
 #define PTR_NUL(ptr) (ptr == NULL)
+#define BORD_DE_LIGNE(lettre)(lettre == '\n' || lettre == EOF)
 #define ERREUR_ALLOCATION printf("\nErreur d'allocation")
 #define TAILLE 5
-
 #endif

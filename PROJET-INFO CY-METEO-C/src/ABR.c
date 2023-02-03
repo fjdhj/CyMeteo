@@ -2,7 +2,7 @@
 
 
 // Fonction permetant de creer le noeud d'un arbre et de retourner son adresse
-pArbre creerArbre(float* tab)
+pArbre creerArbre(float* tab, int taille)
 {
     pArbre nouveau = malloc(sizeof(Arbre));
     if(PTR_NUL(nouveau))
@@ -11,8 +11,11 @@ pArbre creerArbre(float* tab)
         exit(1);
     }
 
+    // Fait une allocation dynamique sur la variable tableau
+    nouveau->tab = malloc(sizeof(float) * taille);
+
     // Affecte toute les valeurs du tableau dans le noeud
-    for(int i = 0; i < TAILLE; i++)
+    for(int i = 0; i < taille; i++)
     {
         nouveau->tab[i] = tab[i];
     }
@@ -23,19 +26,19 @@ pArbre creerArbre(float* tab)
 }
 
 // Ajoute un fils gauche au chainon mis en parametre
-void ajouter_fg(pArbre a, float* tab)
+void ajouter_fg(pArbre a, float* tab, int taille)
 {
     if(PTR_NUL(a))
     {
         ARBRE_VIDE;
     }
 
-    pArbre nouveau = creerArbre(tab);
+    pArbre nouveau = creerArbre(tab, taille);
     a->fg = nouveau;    
 }
 
 // Ajoute un fils droit au chainon mis en parametre
-void ajouter_fd(pArbre a, float* tab)
+void ajouter_fd(pArbre a, float* tab, int taille)
 {
     if(PTR_NUL(a))
     {
@@ -44,17 +47,18 @@ void ajouter_fd(pArbre a, float* tab)
 
     if(!existe_fd(a))
     {
-        pArbre nouveau = creerArbre(tab);
+        pArbre nouveau = creerArbre(tab, taille);
         a->fd = nouveau;
     }
 }
 
+
 // Insert une ligne dans l'ABR en parametre en evaluant la valeur tab[0]
-pArbre insertion_ABR(pArbre a, float* tab)
+pArbre insertion_ABR(pArbre a, float* tab, int taille)
 {
     if(PTR_NUL(a))
     {
-        return creerArbre(tab);
+        return creerArbre(tab, taille);
     }
 
     bool min = false;
@@ -63,12 +67,12 @@ pArbre insertion_ABR(pArbre a, float* tab)
     // On compare toutes les premier champs
     if(tab[0] <= a->tab[0])
     {
-        a->fg = insertion_ABR(a->fg, tab);
+        a->fg = insertion_ABR(a->fg, tab, taille);
     }
 
     else
     {
-        a->fd = insertion_ABR(a->fd, tab);
+        a->fd = insertion_ABR(a->fd, tab, taille);
     }
 
     return a;
@@ -107,16 +111,51 @@ void traiter_noeud(pArbre a)
     }    
 }
 
+void imprimer_noeud(pArbre a, FILE* flux, int taille)
+{
+    if(PTR_NUL(a))
+    {
+        return;
+    }
 
+    for(int i = 0; i < taille; i++)
+    {
+        fprintf(flux, "%f", a->tab[i]);
+        fputc(' ', flux);
+    }
+
+    fprintf(flux, "%s", "\n");
+}
 
 // Fonction permetant de retourner les valeurs de l'arbre de façon croissante
-void parcour_infixe(pArbre a)
+void parcour_infixe(pArbre a, FILE* flux, int taille)
 {
     if(!PTR_NUL(a))
     {
-        parcour_infixe(a->fg);
-        traiter_noeud(a);
-        parcour_infixe(a->fd);
+        parcour_infixe(a->fg, flux, taille);
+        imprimer_noeud(a, flux, taille);
+        parcour_infixe(a->fd, flux, taille);
+    }
+}
+
+// Fonction permetant de retourner les valeurs de l'arbre de façon decroissante
+void parcour_decroissant(pArbre a, FILE* flux, int taille)
+{
+    if(!PTR_NUL(a))
+    {
+        parcour_decroissant(a->fd, flux, taille);
+        imprimer_noeud(a, flux, taille);
+        parcour_decroissant(a->fg, flux, taille);
+    }
+}
+
+void supprimer_arbre(pArbre a)
+{
+    if(!PTR_NUL(a))
+    {
+        supprimer_arbre(a->fg);
+        supprimer_arbre(a->fd);
+        free(a);
     }
 }
 
@@ -125,7 +164,7 @@ void main()
 {
     float tab[TAILLE] = {1};
     float tab2[TAILLE] = {1, 2};
-    pArbre a = creerArbre(tab);
-    a = insertion_ABR(a, tab2);
+    pArbre a = creerArbre(tab, TAILLE);
+    a = insertion_ABR(a, tab2, TAILLE);
     parcour_infixe(a);
 }*/
