@@ -18,9 +18,14 @@ typedef Chainon* pChainon;
 //// Établie les définitions des fonctions
 pChainon creationchainon(float* tab, int taille);
 pChainon insertfin(pChainon pliste, float* tab, int taille);
-pChainon tri_fusion(pChainon pliste);
+pChainon tri_fusion(pChainon pliste, int sens);
 pChainon milieu(pChainon pliste);
-pChainon fusionner(pChainon left, pChainon right) ;
+pChainon fusionner(pChainon left, pChainon right, int sens);
+pChainon trier_listechainee(pChainon pliste, int sens);
+
+
+
+bool condition_deTri(pChainon ptr, pChainon current, int sens);
 
 void traiter(pChainon pliste, int taille);
 void traiterListe(pChainon pliste, int taille);

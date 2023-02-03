@@ -30,5 +30,7 @@ void ajouter_fd(pArbre a, float* tab, int taille);
 void traiter_noeud(pArbre a);
 void imprimer_noeud(pArbre a, FILE* flux, int taille);
 void parcour_infixe(pArbre a, FILE* flux, int taille);
+void parcour_decroissant(pArbre a, FILE* flux, int taille);
+void supprimer_arbre(pArbre a);
 
 #endif

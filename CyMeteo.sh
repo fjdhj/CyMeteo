@@ -210,7 +210,6 @@ if [ "$tempsMin" \> "$tempsMax" ] ; then
 fi
 
 #Vérification du fichier C
-echo "ATTENTION: vérification du fichier C compilé impossible, ca a pas été codé"
 if [ ! -f "$nomProgrammeTri" ] ; then
 	make -C "$nomDossierC" 
 	mv "$nomDossierC/$nomProgrammeTri" .
@@ -260,31 +259,34 @@ fi
 
 #Traitement de chaque type de donnée
 for type in $typeDonne ; do
-	echo "$type"
+	echo "Option : $type"
 	case $type in
 		-[tp]1)
+			echo "    Traitement donnée"
 			#Colone température : 11
 			if [ "$type" == "-t1" ] ; then
 				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
-				donnee="$(echo "$donneBrute" | cut -d";" -f1,11 | grep -v ";$")"
+				donnee="$(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f1,11 | grep -v " $")"
 				nomValeur="Température"
 				unite="°C"
 			#Cas -p1
 			#Colone pression : 7
 			else
 				#Le dernier grep permet de ne pas prendre ceux qui non pas de valeur
-				donnee="$(echo "$donneBrute" | cut -d";" -f1,7 | grep -v ";$")"
+				donnee="$(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f1,7 | grep -v " $")"
 				nomValeur="Pression"
 				unite="Pa"
 			fi
 
 			#Tri des donnée
-			echo "Appel fonction C pas encore implémenté"
+			echo "    Trie donnée"
 			echo "$donnee" > "$fichierEntree"
-			sort -t";" -k1 "$fichierEntree" > "$fichierSortie"
+			touch "$fichierSortie"
+			./exec -f "$fichierEntree" -o "$fichierSortie" "$algoTri" > "/dev/null"
 
 			#Calcule moyenne, min et max
-			awk -F ';' 'BEGIN { num="" ; n=0 } { if(num!=$1){ if(n!=0){print sum/n";"min";"max";"num} num=$1 ; min=$2 ; max=$2 ; n=0 ; sum=0 } sum+=$2 ; n+=1 ; if($2<min){min=$2} if($2>max){max=$2} } END {print sum/n";"min";"max";"num}' "$fichierSortie" > "$fichierPlot"
+			echo "    Traitement post trie donnée"
+			awk -F ' ' 'BEGIN { num="" ; n=0 } { if(num!=$1){ if(n!=0){print sum/n" "min" "max" "int(num)} num=$1 ; min=$2 ; max=$2 ; n=0 ; sum=0 } sum+=$2 ; n+=1 ; if($2<min){min=$2} if($2>max){max=$2} } END {print sum/n" "min" "max" "int(num)}' "$fichierSortie" > "$fichierPlot"
 			
 			gnuplot <<-EOFMarker
 			set terminal png size 1920,1080
@@ -292,7 +294,7 @@ for type in $typeDonne ; do
 			set title "$nomValeur en fonction de la station"
 			set xlabel "ID Station"
 			set ylabel "$nomValeur ($unite)"
-			set datafile separator ";"
+			set datafile separator " "
 			Shadecolor = "#80E0A080"
 			set xtics rotate by 45 offset -2,-1.5
 			plot "$fichierPlot" using 0:3:2 with filledcurve fc rgb Shadecolor title "Plage de $nomValeur", ''using 0:1:xtic(4) lw 2 with linespoints title "$nomValeur moyenne"
@@ -301,31 +303,34 @@ for type in $typeDonne ; do
 		;;
 
 		-[tp]2)
+			echo "    Traitement donnée"
 			if [ "$type" == "-t2" ] ; then
 				#Récupèration date et heure convertie et pression
-				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d%H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f11))"
+				donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f11))"
 				nomValeur="Température"
 				unite="°C"
 				couleur="#ff3333"
 			#Cas -p2
 			else
 				#Récupèration date et heure convertie et pression
-				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d%H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f7))"
+				donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f7))"
 				nomValeur="Pression"
 				unite="Pa"
 				couleur="#1a75ff"
 
 			fi
 
-			time donnee="$(echo "$donnee" | grep -Ev "[[:space:]]$")"
+			donnee="$(echo "$donnee" | grep -Ev "[[:space:]]$")"
 
 			#Tri des donnée
-			echo "Appel fonction C pas encore implémenté"
+			echo "    Trie donnée"
 			echo "$donnee" > "$fichierEntree"
-			time sort "$fichierEntree" > "$fichierSortie"
+			touch "$fichierSortie"
+			./exec -f "$fichierEntree" -o "$fichierSortie" "$algoTri" > "/dev/null"
 
 			#Calcule moyenne
-			time awk -F ' ' 'BEGIN { date="" ; n=0 } { if(date!=$1){ if(n!=0){print date" "sum/n} date=$1 ; n=0 ; sum=0 } sum+=$2 ; n+=1 } END {print date" "sum/n}' "$fichierSortie" > "$fichierPlot"
+			echo "    Traitement post trie donnée"
+			awk -F ' ' 'BEGIN { date="" ; n=0 } { if(date!=$1){ if(n!=0){print int(date)" "sum/n} date=$1 ; n=0 ; sum=0 } sum+=$2 ; n+=1 } END {print int(date)" "sum/n}' "$fichierSortie" > "$fichierPlot"
 			
 			#Generation graphique via gnuplot
 			gnuplot <<-EOFMarker
@@ -344,24 +349,22 @@ for type in $typeDonne ; do
 			Couleur = "$couleur"
 			plot "$fichierPlot" using 1:2 with lines lw 2 lc rgbcolor "$couleur" title "$nomValeur moyenne"
 			EOFMarker
-			;;
+			;; 
 			
 
 		-[tp]3)
-			echo "Marche PAS"
+			echo "    Traitement donnée"
 			if [ "$type" == "-t3" ] ; then
 				#Récupèration date et heure convertie et pression
-				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d %H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f11))"
+				donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d %H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f11))"
 				nomValeur="Température"
 				unite="°C"
-				couleur="#ff3333"
 			#Cas -p3
 			else
 				#Récupèration date et heure convertie et pression
-				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d %H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f7))"
+				donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d %H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f7))"
 				nomValeur="Pression"
 				unite="Pa"
-				couleur="#1a75ff"
 
 			fi
 
@@ -370,21 +373,22 @@ for type in $typeDonne ; do
 			donnee=$( echo "$donneBrute" | cut -d";" --output-delimiter=" " -f1 | pr -mts' ' - <(echo "$donnee")) 
 
 			#Tri des donnée
-			echo "Appel fonction C pas encore implémenté"
-			echo "$donnee" | grep -v "[[:space:]]$"> "$fichierEntree"
-			time sort -t" " -k1n "$fichierEntree" > "$fichierSortie"
+			echo "$donnee" | awk -F" " '{ if($4 != "") { print $0} }' > "$fichierEntree"
+			touch "$fichierSortie"
+			echo "    Trie donnée"
+			./exec -f "$fichierEntree" -o "$fichierSortie" "$algoTri" > "/dev/null"
 
-			time awk -F' ' 'BEGIN { data = "" ; num = ""}
+			awk -F' ' 'BEGIN { data = "" ; num = ""}
 						     { if(num!=$1) { if(data!="") { print data > "tmp"num".csv" } data = "" ; num=$1} data=data $2" "$3" "$1" "$4"\n"}
 					    END  { print data > "tmp"num".csv"}' "$fichierSortie"
 
+			echo "    Traitement post trie donnée"
 			i=0
 			for fichier in tmp*.csv ; do
-				time sort -t" " -k1n "$fichier" > "$fichierSortie"
-				echo "opération awk"
+				./exec -f "$fichier" -o "$fichierSortie" "$algoTri" > "/dev/null"
 				#Opération poste trie : on met chaque heure dans une case differente
 				awk -F' ' 'BEGIN { for(i = 0; i < 24; i++) {heure[i]=""} } \
-								 { heure[$2]=heure[$2] $1" "$2" "$3" "$4"\n" } \
+								 { $2 = int($2); $1 = int($1) ; $3 = int($3) ; if($1 != "0") {heure[$2]=heure[$2] $1" "$2" "$3" "$4"\n" } } \
 						   END   { for(i = 0; i < 24; i++) { if(heure[i] != "") { printf heure[i] "\n\n" } } }' "$fichier" > "${i}$fichierPlot"
 				i=$((i+1))
 			done
@@ -395,44 +399,38 @@ for type in $typeDonne ; do
 			gnuplot <<-EOFMarker
 			set terminal png size 1920,1080
 			set output "out.png"
-			set title "Graphique sans nom"
+			set title "Evoltion $nomValeur en fonction de l'heure et du jour"
 			set xlabel "Jour"
-			set ylabel "Pression (Pa)"
+			set ylabel "$nomValeur ($unite)"
 			set datafile separator " "
 			set xdata time
 			set timefmt '%Y%m%d'
-			set xtics rotate by 45 offset -2,-1.5
-			
-			set style line 2  lc rgb '#0025ad' lt 1 lw 1.5 # --- blue
-			set style line 3  lc rgb '#0042ad' lt 1 lw 1.5 #      .
-			set style line 4  lc rgb '#0060ad' lt 1 lw 1.5 #      .
-			set style line 5  lc rgb '#007cad' lt 1 lw 1.5 #      .
-			set style line 6  lc rgb '#0099ad' lt 1 lw 1.5 #      .
-			set style line 7  lc rgb '#00ada4' lt 1 lw 1.5 #      .
-			set style line 8  lc rgb '#00ad88' lt 1 lw 1.5 #      .
-			set style line 9  lc rgb '#00ad6b' lt 1 lw 1.5 #      .
-			set style line 10 lc rgb '#00ad4e' lt 1 lw 1.5 #      .
-			set style line 11 lc rgb '#00ad31' lt 1 lw 1.5 #      .
-			set style line 12 lc rgb '#00ad14' lt 1 lw 1.5 #      .
-			set style line 13 lc rgb '#09ad00' lt 1 lw 1.5 # --- green
-			set style increment user
 
-			plot for[i=0:$i] "".i."$fichierPlot" using 1:4:2 with lines lc var lw 2 title
+			set palette rgb 33,13,10
+
+			plot for[i=0:$i] "".i."$fichierPlot" using 1:4:2 with lines palette notitle
 			EOFMarker
+
+			for elem in tmp*.csv ; do
+				rm $elem 2>"/dev/null"
+			done
 
 		;;
 
 		-w)
+			echo "    Traitement donnée"
 			#Formatage des données
-			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $4 != "" && $5 != "" ){split($10, coord, ",") ; print $1";"coord[1]";"coord[2]";"$4";"$5} }')"
+			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $4 != "" && $5 != "" ){split($10, coord, ",") ; print $1" "coord[1]" "coord[2]" "$4" "$5} }')"
 			
 			#Tri des donnée
-			echo "Appel fonction C pas encore implémenté"
+			echo "    Trie donnée"
 			echo "$donnee" > "$fichierEntree"
-			sort "$fichierEntree" > "$fichierSortie"
+			./exec -f "$fichierEntree" -o "$fichierSortie" "$algoTri" > "/dev/null"
+			
 
 			#Calcule moyenne
-			awk -F ';' 'BEGIN { num="" ; force=0 ; direction=0 ; n=0 ; ns=0 ; eo=0 } { if(num!=$1){ if(n!=0){print num";"ns";"eo";"direction/n";"force/n} num=$1 ; n=0 ; direction=0 ; force = 0 ; ns=$2 ; eo=$3 } direction+=$4 ; force+=$5 ; n+=1 } END {print num";"ns";"eo";"direction/n";"force/n}' "$fichierSortie" > "$fichierPlot"
+			echo "    Traitement post trie donnée"
+			awk -F ' ' 'BEGIN { num="" ; force=0 ; direction=0 ; n=0 ; ns=0 ; eo=0 } { $1=int($1); $2=int($2); $3=int($3) ; if(num!=$1){ if(n!=0){print num" "ns" "eo" "direction/n" "force/n} num=$1 ; n=0 ; direction=0 ; force = 0 ; ns=$2 ; eo=$3 } direction+=$4 ; force+=$5 ; n+=1 } END {print num" "ns" "eo" "direction/n" "force/n}' "$fichierSortie" > "$fichierPlot"
 
 			#Récupèration x et y min/max en fonction de la zone géographique
 			case $position in
@@ -520,7 +518,7 @@ for type in $typeDonne ; do
 			set title "Moyenne force et direction moyen du vent"
 			set xlabel "Coord. Nord"
 			set ylabel "Coord. Est"
-			set datafile separator ";"
+			set datafile separator " "
 			set angles degrees
 			set xrange [$xmin:$xmax]
 			set yrange [$ymin:$ymax]
@@ -530,13 +528,15 @@ for type in $typeDonne ; do
 		
 		-h)
 			#Formatage des données
-			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $14 != "" ){split($10, coord, ",") ; print $14";"coord[1]";"coord[2]} }')"
+			echo "    Traitement donnée"
+			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $14 != "" ){split($10, coord, ",") ; print $14" "coord[1]" "coord[2]} }')"
 
 			#Tri des donnée
-			echo "Appel fonction C pas encore implémenté"
+			echo "    Trie donnée"
 			echo "$donnee" > "$fichierEntree"
-			sort -t";" -k1 -r "$fichierEntree" > "$fichierSortie"
+			./exec -f "$fichierEntree" -o "$fichierSortie" "$algoTri" -r > "/dev/null"
 
+			echo "    Traitement post trie donnée"
 			uniq "$fichierSortie" > "$fichierPlot"
 
 			#Generation graphique via gnuplot
@@ -546,7 +546,7 @@ for type in $typeDonne ; do
 			set title "Altitude Station"
 			set xlabel "Coord. Nord"
 			set ylabel "Coord. Est"
-			set datafile separator ";"
+			set datafile separator " "
 			
 			set xrang [*:*] noextend
 			set yrang [*:*] noextend
@@ -559,14 +559,16 @@ for type in $typeDonne ; do
 			;;
 
 		-m)
-			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $6 != "" ){split($10, coord, ",") ; print $1";"$6";"coord[1]";"coord[2]} }')"
+			echo "    Traitement donnée"
+			donnee="$(echo "$donneBrute" | awk -F';' '{ if( $6 != "" ){split($10, coord, ",") ; print $1" "$6" "coord[1]" "coord[2]} }')"
 		
 			#Tri des donnée
-			echo "Appel fonction C pas encore implémenté"
+			echo "    Trie donnée"
 			echo "$donnee" > "$fichierEntree"
-			sort -t";" -k1 -r "$fichierEntree" > "$fichierSortie"
+			./exec -f "$fichierEntree" -o "$fichierSortie" "$algoTri" -r > "/dev/null"
 
-			awk -F ';' 'BEGIN { num="" } { if(num!=$1){ if(num!=""){print num";"max";"x";"y} x=$3 ; y=$4 ; max=$2 ; num=$1 } if($2>max){max=$2} } END {print num";"max";"x";"y}' "$fichierSortie" > "$fichierPlot"
+			echo "    Traitement post trie donnée"
+			awk -F ' ' 'BEGIN { num="" } { if(num!=$1){ if(num!=""){print num" "max" "x" "y} x=$3 ; y=$4 ; max=$2 ; num=$1 } if($2>max){max=$2} } END {print num" "max" "x" "y}' "$fichierSortie" > "$fichierPlot"
 
 			#Generation graphique via gnuplot
 			gnuplot <<-EOFMarker
@@ -575,7 +577,7 @@ for type in $typeDonne ; do
 			set title "Humidité max Station"
 			set xlabel "Coord. Nord"
 			set ylabel "Coord. Est"
-			set datafile separator ";"
+			set datafile separator " "
 			
 			set xrang [*:*] noextend
 			set yrang [*:*] noextend
@@ -583,7 +585,7 @@ for type in $typeDonne ; do
 			set view map
 			set pm3d interpolate 7,7
 			set dgrid3d
-			splot "$fichierPlot" using 4:3:2 with pm3d title "Hauteur (mètre)"
+			splot "$fichierPlot" using 4:3:2 with pm3d title "Humidité (%)"
 			EOFMarker
 			;;
 
@@ -591,4 +593,10 @@ for type in $typeDonne ; do
 			echo "Erreur grave, le cas $type n'est pas traiter (type de donnée)." 
 			exit 4 ;;
 	esac
+
+	#for elem in *$fichierPlot ; do
+	#	rm $elem 2>"/dev/null"
+	#done
 done
+
+#rm $fichierEntree $fichierSortie 2>"/dev/null"

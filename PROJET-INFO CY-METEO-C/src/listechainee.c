@@ -24,6 +24,52 @@ pChainon creationchainon(float* tab, int taille)
     return nouveau;
 }
 
+bool condition_deTri(pChainon ptr, pChainon current, int sens)
+{
+    return (sens <= 0) ? (ptr->tab[0] < current->tab[0]) : (ptr->tab[0] > current->tab[0]);
+}
+
+pChainon trier_listechainee(pChainon pliste, int sens)
+{
+    pChainon sorted = NULL;
+    pChainon current = pliste;
+    
+    while (!PTR_NUL(current)) 
+    {
+        pChainon next = current->suivant;
+
+        // Trouver l'emplacement correct pour le chaînon courant dans la liste triée
+        pChainon ptr = sorted; // Premier chainon de la liste trié
+        pChainon prev = NULL;
+        
+        while (!PTR_NUL(ptr) && condition_deTri(ptr, current, sens)) 
+        {
+            prev = ptr;
+            ptr = ptr->suivant;
+        }
+
+        // Insérer le chaînon courant dans la liste triée
+        if (PTR_NUL(prev)) 
+        {
+            current->suivant = sorted;
+            sorted = current;
+        }
+        else 
+        {
+            current->suivant = ptr;
+            prev->suivant = current;
+        }
+
+        current = next;
+    } 
+
+    // Retourner la référence à la tête de la liste triée
+    return sorted;
+}
+
+
+
+
 
 // Insert un nouveau chainon à la fin de la liste en parametre
 pChainon insertfin(pChainon pliste, float* tab, int taille)
@@ -50,7 +96,7 @@ pChainon insertfin(pChainon pliste, float* tab, int taille)
 
 
 // Trie la liste chainée en suivant la methode du trie fusion
-pChainon tri_fusion(pChainon pliste)
+pChainon tri_fusion(pChainon pliste, int sens)
 {
     if(PTR_NUL(pliste) || PTR_NUL(pliste->suivant))
     {
@@ -66,10 +112,10 @@ pChainon tri_fusion(pChainon pliste)
     droite->suivant = NULL;
     droite = temp;
 
-    gauche = tri_fusion(gauche);
-    droite = tri_fusion(droite);
+    gauche = tri_fusion(gauche, sens);
+    droite = tri_fusion(droite, sens);
 
-    return fusionner(gauche, droite);
+    return fusionner(gauche, droite, sens);
 }
 
 pChainon milieu(pChainon pliste)
@@ -87,7 +133,7 @@ pChainon milieu(pChainon pliste)
 
 }
 
-pChainon fusionner(pChainon gauche, pChainon droite) 
+pChainon fusionner(pChainon gauche, pChainon droite, int sens) 
 {
     pChainon result = NULL;
 
@@ -100,16 +146,18 @@ pChainon fusionner(pChainon gauche, pChainon droite)
         return gauche;
     }
 
+    bool condition_trie = (sens <= 0) ? gauche->tab[0] <= droite->tab[0] : gauche->tab[0] >= droite->tab[0];
+
     // Le trie se base sur la comparaison entre les valeurs de tab[0]
-    if (gauche->tab[0] <= droite->tab[0])
+    if (condition_trie)
     {
         result = gauche;
-        result->suivant = fusionner(gauche->suivant, droite);
+        result->suivant = fusionner(gauche->suivant, droite, sens);
     }
     else 
     {
         result = droite;
-        result->suivant = fusionner(gauche, droite->suivant);
+        result->suivant = fusionner(gauche, droite->suivant, sens);
     }
 
 }
