@@ -349,28 +349,48 @@ for type in $typeDonne ; do
 
 		-[tp]3)
 			echo "Marche PAS"
-			#Il faut trier en fonction de la date PUIS du numéro de station, donc le format seras particulier : 
-			#on met la date PUIS le numéro de station coller l'un a l'autre
 			if [ "$type" == "-t3" ] ; then
-				#Récupèration date et station avec heure et pression
-				donnee="$(echo "$donneBrute" | awk -F';' '{ if($11!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$11 } }')"
-			
+				#Récupèration date et heure convertie et pression
+				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d %H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f11))"
+				nomValeur="Température"
+				unite="°C"
+				couleur="#ff3333"
 			#Cas -p3
 			else
-				#Récupèration date et station avec heure et température
-				donnee="$(echo "$donneBrute" | awk -F';' '{ if($7!=""){ print substr($2, 1, 4) substr($2, 6, 2) substr($2, 9, 2) $1";"substr($2,12,2)-substr($2,20,3)";"$7 } }')"
+				#Récupèration date et heure convertie et pression
+				time donnee="$(echo "$donneBrute" | cut -d';' -f2 | date -u -f - '+%Y%m%d %H' | pr -mts' ' - <(echo "$donneBrute" | cut -d";" --output-delimiter=" " -f7))"
+				nomValeur="Pression"
+				unite="Pa"
+				couleur="#1a75ff"
+
 			fi
+
+			
+
+			donnee=$( echo "$donneBrute" | cut -d";" --output-delimiter=" " -f1 | pr -mts' ' - <(echo "$donnee")) 
 
 			#Tri des donnée
 			echo "Appel fonction C pas encore implémenté"
-			echo "$donnee" > "$fichierEntree"
-			sort "$fichierEntree" > "$fichierSortie"
+			echo "$donnee" | grep -v "[[:space:]]$"> "$fichierEntree"
+			time sort -t" " -k1n "$fichierEntree" > "$fichierSortie"
 
-			#Opération poste trie : on met chaque heure dans une case differente
-			awk -F';' 'BEGIN { for(i = 0; i < 24; i++) {heure[i]=""} } \
-						     { heure[$2]=heure[$2] substr($1,1,8)";"substr($1,9)";"$2";"$3"\n" } \
-					   END   { for(i = 0; i < 24; i++) { if(heure[i] != "") { printf heure[i] "\n\n" } } }' "$fichierSortie" > "$fichierPlot"
+			time awk -F' ' 'BEGIN { data = "" ; num = ""}
+						     { if(num!=$1) { if(data!="") { print data > "tmp"num".csv" } data = "" ; num=$1} data=data $2" "$3" "$1" "$4"\n"}
+					    END  { print data > "tmp"num".csv"}' "$fichierSortie"
 
+			i=0
+			for fichier in tmp*.csv ; do
+				time sort -t" " -k1n "$fichier" > "$fichierSortie"
+				echo "opération awk"
+				#Opération poste trie : on met chaque heure dans une case differente
+				awk -F' ' 'BEGIN { for(i = 0; i < 24; i++) {heure[i]=""} } \
+								 { heure[$2]=heure[$2] $1" "$2" "$3" "$4"\n" } \
+						   END   { for(i = 0; i < 24; i++) { if(heure[i] != "") { printf heure[i] "\n\n" } } }' "$fichier" > "${i}$fichierPlot"
+				i=$((i+1))
+			done
+			i=$((i-1))
+
+			echo "Génération graphique"
 			#Generation graphique via gnuplot
 			gnuplot <<-EOFMarker
 			set terminal png size 1920,1080
@@ -378,10 +398,11 @@ for type in $typeDonne ; do
 			set title "Graphique sans nom"
 			set xlabel "Jour"
 			set ylabel "Pression (Pa)"
-			set datafile separator ";"
+			set datafile separator " "
 			set xdata time
 			set timefmt '%Y%m%d'
 			set xtics rotate by 45 offset -2,-1.5
+			
 			set style line 2  lc rgb '#0025ad' lt 1 lw 1.5 # --- blue
 			set style line 3  lc rgb '#0042ad' lt 1 lw 1.5 #      .
 			set style line 4  lc rgb '#0060ad' lt 1 lw 1.5 #      .
@@ -394,7 +415,9 @@ for type in $typeDonne ; do
 			set style line 11 lc rgb '#00ad31' lt 1 lw 1.5 #      .
 			set style line 12 lc rgb '#00ad14' lt 1 lw 1.5 #      .
 			set style line 13 lc rgb '#09ad00' lt 1 lw 1.5 # --- green
-			plot "$fichierPlot" using 1:4 with lines ls 2 lw 2 title "aza"
+			set style increment user
+
+			plot for[i=0:$i] "".i."$fichierPlot" using 1:4:2 with lines lc var lw 2 title
 			EOFMarker
 
 		;;
