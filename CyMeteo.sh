@@ -594,9 +594,9 @@ for type in $typeDonne ; do
 			exit 4 ;;
 	esac
 
-	#for elem in *$fichierPlot ; do
-	#	rm $elem 2>"/dev/null"
-	#done
+	for elem in *$fichierPlot ; do
+        	rm $elem 2>"/dev/null"
+	done
 done
 
-#rm $fichierEntree $fichierSortie 2>"/dev/null"
+rm $fichierEntree $fichierSortie 2>"/dev/null"
