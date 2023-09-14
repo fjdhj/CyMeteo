@@ -10,20 +10,19 @@ Toutes les commandes peuvent être placé dans l'ordre que vous voulez
 Voici la liste de commandes dont vous aurrez besoin:
 
 # **SHELL:**
-    * -t: Température 
-    * -p: Préssion 
-    * -w: Vents 
-    * -h: Altitude 
-    * -m: Humidité 
+    -t: Température 
+    -p: Préssion 
+    -w: Vents 
+    -h: Altitude 
+    -m: Humidité 
 
 ## MODES:
 
 *Pour les commandes t et p 3 modes existent:*
-**<ul>**
-    * <strong> MODE1:</strong> Diagramme de type barres d’erreur avec en abscisse l’identifiant de la station, et en ordonnée le minimum, maximum et la moyenne
-    * <strong> MODE2:</strong> Diagramme de type ligne simple avec en abscisse le jour et l’heure
+    - <strong> MODE1:</strong> Diagramme de type barres d’erreur avec en abscisse l’identifiant de la station, et en ordonnée le minimum, maximum et la moyenne
+    - <strong> MODE2:</strong> Diagramme de type ligne simple avec en abscisse le jour et l’heure
     des mesures, et en ordonnée la moyenne des mesures
-    * <strong> MODE3: </strong>Diagramme de type multi-lignes avec en abscisse les jours, et en
+    - <strong> MODE3: </strong>Diagramme de type multi-lignes avec en abscisse les jours, et en
     ordonnée les valeurs mesurées. Ce diagramme contiendra toutes les
     lignes, 1 par station et par heure 
 
@@ -35,15 +34,13 @@ Voici la liste de commandes dont vous aurrez besoin:
 
 # **C:**
 
-**<ul>**
-    * -o: Fichier d'entrée 
-    * -f: Fichier de sortie
-    * --ABR: Effectuer un trie ABR
-    * --AVL: Effectuer un trie AVL
-    * --tab: Effecuter un trie de liste chainnées
-    * -r: Effectue un trie décroissant
+    -o: Fichier d'entrée 
+    -f: Fichier de sortie
+    --ABR: Effectuer un trie ABR
+    --AVL: Effectuer un trie AVL
+    --tab: Effecuter un trie de liste chainnées
+    -r: Effectue un trie décroissant
 
-</ul>
 
 **<br>**
 
@@ -63,12 +60,11 @@ Voici la liste de commandes dont vous aurrez besoin:
 
 # **SHELL:**
 
-**<ul>**
-    * -t: Température 
-    * -p: Préssion 
-    * -w: Vents 
-    * -h: Altitude 
-    * -m: Humidité 
+    -t: Température 
+    -p: Préssion 
+    -w: Vents 
+    -h: Altitude 
+    -m: Humidité 
 
 ## MODES:
 
@@ -80,23 +76,15 @@ Voici la liste de commandes dont vous aurrez besoin:
     ordonnée les valeurs mesurées. Ce diagramme contiendra toutes les
     lignes, 1 par station et par heure 
 
-</ul>
-
-**</ul>**
-
-**<br>**
 
 # **C:**
-    * -o: Fichier d'entrée 
-    * -f: Fichier de sortie
-    * --ABR: Effectuer un trie ABR
-    * --AVL: Effectuer un trie AVL
-    * --tab: Effecuter un trie de liste chainnées
-    * -r: Effectue un trie décroissant
+    -o: Fichier d'entrée 
+    -f: Fichier de sortie
+    --ABR: Effectuer un trie ABR
+    --AVL: Effectuer un trie AVL
+    --tab: Effecuter un trie de liste chainnées
+    -r: Effectue un trie décroissant
 
-</ul>
-
-**<br>**
 
 # Compilation
 
