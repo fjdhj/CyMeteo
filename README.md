@@ -10,24 +10,22 @@ Toutes les commandes peuvent être placé dans l'ordre que vous voulez
 Voici la liste de commandes dont vous aurrez besoin:
 
 # **SHELL:**
-
-**<ul>**
-    <li>-t: Température </li>
-    <li>-p: Préssion </li>
-    <li>-w: Vents </li>
-    <li>-h: Altitude </li>
-    <li>-m: Humidité </li>
+    * -t: Température 
+    * -p: Préssion 
+    * -w: Vents 
+    * -h: Altitude 
+    * -m: Humidité 
 
 ## MODES:
 
 *Pour les commandes t et p 3 modes existent:*
 **<ul>**
-    <li><strong> MODE1:</strong> Diagramme de type barres d’erreur avec en abscisse l’identifiant de la station, et en ordonnée le minimum, maximum et la moyenne</li>
-    <li><strong> MODE2:</strong> Diagramme de type ligne simple avec en abscisse le jour et l’heure
-    des mesures, et en ordonnée la moyenne des mesures</li>
-    <li><strong> MODE3: </strong>Diagramme de type multi-lignes avec en abscisse les jours, et en
+    * <strong> MODE1:</strong> Diagramme de type barres d’erreur avec en abscisse l’identifiant de la station, et en ordonnée le minimum, maximum et la moyenne
+    * <strong> MODE2:</strong> Diagramme de type ligne simple avec en abscisse le jour et l’heure
+    des mesures, et en ordonnée la moyenne des mesures
+    * <strong> MODE3: </strong>Diagramme de type multi-lignes avec en abscisse les jours, et en
     ordonnée les valeurs mesurées. Ce diagramme contiendra toutes les
-    lignes, 1 par station et par heure </li>
+    lignes, 1 par station et par heure 
 
 </ul>
 
@@ -38,12 +36,12 @@ Voici la liste de commandes dont vous aurrez besoin:
 # **C:**
 
 **<ul>**
-    <li>-o: Fichier d'entrée </li>
-    <li>-f: Fichier de sortie</li>
-    <li>--ABR: Effectuer un trie ABR</li>
-    <li>--AVL: Effectuer un trie AVL</li>
-    <li>--tab: Effecuter un trie de liste chainnées</li>
-    <li>-r: Effectue un trie décroissant</li>
+    * -o: Fichier d'entrée 
+    * -f: Fichier de sortie
+    * --ABR: Effectuer un trie ABR
+    * --AVL: Effectuer un trie AVL
+    * --tab: Effecuter un trie de liste chainnées
+    * -r: Effectue un trie décroissant
 
 </ul>
 
@@ -66,22 +64,21 @@ Voici la liste de commandes dont vous aurrez besoin:
 # **SHELL:**
 
 **<ul>**
-    <li>-t: Température </li>
-    <li>-p: Préssion </li>
-    <li>-w: Vents </li>
-    <li>-h: Altitude </li>
-    <li>-m: Humidité </li>
+    * -t: Température 
+    * -p: Préssion 
+    * -w: Vents 
+    * -h: Altitude 
+    * -m: Humidité 
 
 ## MODES:
 
 *Pour les commandes t et p 3 modes existent:*
-**<ul>**
-    <li><strong> MODE1:</strong> Diagramme de type barres d’erreur avec en abscisse l’identifiant de la station, et en ordonnée le minimum, maximum et la moyenne</li>
-    <li><strong> MODE2:</strong> Diagramme de type ligne simple avec en abscisse le jour et l’heure
-    des mesures, et en ordonnée la moyenne des mesures</li>
-    <li><strong> MODE3: </strong>Diagramme de type multi-lignes avec en abscisse les jours, et en
+    * <strong> MODE1:</strong> Diagramme de type barres d’erreur avec en abscisse l’identifiant de la station, et en ordonnée le minimum, maximum et la moyenne
+    * <strong> MODE2:</strong> Diagramme de type ligne simple avec en abscisse le jour et l’heure
+    des mesures, et en ordonnée la moyenne des mesures
+    * <strong> MODE3: </strong>Diagramme de type multi-lignes avec en abscisse les jours, et en
     ordonnée les valeurs mesurées. Ce diagramme contiendra toutes les
-    lignes, 1 par station et par heure </li>
+    lignes, 1 par station et par heure 
 
 </ul>
 
@@ -90,14 +87,12 @@ Voici la liste de commandes dont vous aurrez besoin:
 **<br>**
 
 # **C:**
-
-**<ul>**
-    <li>-o: Fichier d'entrée </li>
-    <li>-f: Fichier de sortie</li>
-    <li>--ABR: Effectuer un trie ABR</li>
-    <li>--AVL: Effectuer un trie AVL</li>
-    <li>--tab: Effecuter un trie de liste chainnées</li>
-    <li>-r: Effectue un trie décroissant</li>
+    * -o: Fichier d'entrée 
+    * -f: Fichier de sortie
+    * --ABR: Effectuer un trie ABR
+    * --AVL: Effectuer un trie AVL
+    * --tab: Effecuter un trie de liste chainnées
+    * -r: Effectue un trie décroissant
 
 </ul>
 
