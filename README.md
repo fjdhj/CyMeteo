@@ -18,19 +18,14 @@ Voici la liste de commandes dont vous aurrez besoin:
 
 ## MODES:
 
-*Pour les commandes t et p 3 modes existent:*
+*Pour les commandes t et p 3 modes existent:*```
     - **MODE1:** Diagramme de type barres d’erreur avec en abscisse l’identifiant de la station, et en ordonnée le minimum, maximum et la moyenne
     - **MODE2:** Diagramme de type ligne simple avec en abscisse le jour et l’heure
     des mesures, et en ordonnée la moyenne des mesures
     - **MODE3:** Diagramme de type multi-lignes avec en abscisse les jours, et en
     ordonnée les valeurs mesurées. Ce diagramme contiendra toutes les
-    lignes, 1 par station et par heure 
+    lignes, 1 par station et par heure```
 
-</ul>
-
-**</ul>**
-
-**<br>**
 
 # **C:**
 
